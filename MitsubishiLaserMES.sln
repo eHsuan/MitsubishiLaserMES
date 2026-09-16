@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MitsubishiLaserMES.Core", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MitsubishiLaserMES.WinForms", "src\MitsubishiLaserMES.WinForms\MitsubishiLaserMES.WinForms.csproj", "{8EDF46EB-E63B-4445-A813-48201D5EB062}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MitsubishiLaser.Simulator", "src\MitsubishiLaser.Simulator\MitsubishiLaser.Simulator.csproj", "{A452230C-A1A4-4689-9FEE-C495D4CAF28E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{8EDF46EB-E63B-4445-A813-48201D5EB062}.Release|x64.Build.0 = Release|Any CPU
 		{8EDF46EB-E63B-4445-A813-48201D5EB062}.Release|x86.ActiveCfg = Release|Any CPU
 		{8EDF46EB-E63B-4445-A813-48201D5EB062}.Release|x86.Build.0 = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|x64.Build.0 = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Debug|x86.Build.0 = Debug|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|x64.ActiveCfg = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|x64.Build.0 = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|x86.ActiveCfg = Release|Any CPU
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,5 +64,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{C772851E-78C8-4D39-8616-FABFB5FA8256} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{8EDF46EB-E63B-4445-A813-48201D5EB062} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{A452230C-A1A4-4689-9FEE-C495D4CAF28E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
