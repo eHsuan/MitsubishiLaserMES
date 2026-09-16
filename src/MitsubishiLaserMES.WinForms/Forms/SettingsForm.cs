@@ -22,6 +22,10 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private TextBox txtOpcEndpoint;
         private CheckBox chkOpcSecurity;
 
+        public SettingsForm() : this(new AppConfig())
+        {
+        }
+
         public SettingsForm(AppConfig config)
         {
             _config = config ?? new AppConfig();

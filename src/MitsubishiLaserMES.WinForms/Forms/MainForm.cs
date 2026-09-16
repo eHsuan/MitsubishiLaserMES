@@ -17,12 +17,26 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private readonly AppConfig _config;
         private bool _isEnglish = false;
 
-        public MainForm(IMesCoordinator coordinator, AppConfig config)
+        /// <summary>
+        /// 提供 Visual Studio 設計工具 (WinForms Designer) 視覺化檢視與拖拉排版使用的無參數建構函式
+        /// </summary>
+        public MainForm()
+        {
+            InitializeComponent();
+            if (DesignMode || System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+        }
+
+        /// <summary>
+        /// 執行時期由依賴注入與進入點呼叫之主要建構函式
+        /// </summary>
+        public MainForm(IMesCoordinator coordinator, AppConfig config) : this()
         {
             _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
             _config = config ?? new AppConfig();
 
-            InitializeComponent();
             BindCoordinatorEvents();
             BindFormEvents();
             InitSampleData();

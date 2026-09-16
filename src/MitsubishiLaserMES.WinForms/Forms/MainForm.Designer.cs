@@ -1,126 +1,16 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
-
 namespace MitsubishiLaserMES.WinForms.Forms
 {
     partial class MainForm
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        // 頂部區塊
-        private GroupBox grpCurrentOperator;
-        private Label lblOpId;
-        private Label lblOpName;
-        private TextBox txtCurrentOpId;
-        private TextBox txtCurrentOpName;
-
-        private GroupBox grpAuth;
-        private Label lblBarcode;
-        private Label lblUserId;
-        private Label lblPassword;
-        private TextBox txtBarcode;
-        private TextBox txtLoginUserId;
-        private TextBox txtLoginPassword;
-        private Button btnUserAuth;
-        private Button btnClearAuth;
-
-        private Button btnSettings;
-        private Button btnConnectMes;
-        private Button btnToggleLang;
-        private Button btnDisconnectMes;
-        private Panel pnlMqttLed;
-        private Label lblMqttLed;
-
-        // 主 TabControl
-        private TabControl tabMain;
-        private TabPage tabWorkOrder;
-        private TabPage tabEquipment;
-        private TabPage tabItTest;
-
-        // Tab 1: 工單功能
-        private GroupBox grpOrderInfo;
-        private Label lblWo;
-        private Label lblBatchNo;
-        private Label lblPartNo;
-        private Label lblProcessNo;
-        private Label lblProcessName;
-        private Label lblTotalQty;
-        private Label lblRunQty;
-        private Label lblCompletedQty;
-        private Label lblRecipeId;
-        private Label lblIsTrackedIn;
-        private Label lblComponentNo;
-
-        private TextBox txtWorkOrder;
-        private TextBox txtBatchNo;
-        private TextBox txtPartNo;
-        private TextBox txtProcessNo;
-        private TextBox txtProcessName;
-        private TextBox txtTotalQty;
-        private TextBox txtRunQty;
-        private TextBox txtCompletedQty;
-        private TextBox txtRecipeId;
-        private TextBox txtIsTrackedIn;
-        private TextBox txtComponentNo;
-
-        private GroupBox grpNgInput;
-        private CheckBox chkNoNg;
-        private DataGridView dgvNgList;
-        private Button btnAddNg;
-        private Button btnRemoveNg;
-
-        private GroupBox grpTrackedInList;
-        private DataGridView dgvTrackedIn;
-
-        private GroupBox grpManageParams;
-        private DataGridView dgvManageParams;
-
-        private GroupBox grpOrderActions;
-        private Button btnQueryOrder;
-        private Button btnTrackIn;
-        private Button btnTrackOut;
-        private Button btnChangeUser;
-        private Button btnClearOrder;
-
-        // Tab 2: 設備功能
-        private GroupBox grpOpcStatus;
-        private Label lblOpcConn;
-        private Label lblMachineState;
-        private Label lblActivePrg;
-        private Label lblProgress;
-        private Panel pnlLampGreen;
-        private Panel pnlLampYellow;
-        private Panel pnlLampRed;
-        private Label lblLampGreen;
-        private Label lblLampYellow;
-        private Label lblLampRed;
-        private Button btnModeLocal;
-        private Button btnModeSemiAuto;
-        private Button btnModeAuto;
-        private Button btnStartSchedule;
-
-        private GroupBox grpAlarmList;
-        private DataGridView dgvAlarms;
-
-        // Tab 3: IT 測試
-        private GroupBox grpTestActions;
-        private Button btnTestAlive;
-        private Button btnTestProcessData;
-        private Button btnTestAlarmStart;
-        private Button btnTestAlarmEnd;
-        private Button btnClearLogs;
-        private DataGridView dgvMqttLogs;
-
-        // 底部執行結果
-        private GroupBox grpResult;
-        private Label lblResult;
-        private Label lblResultCode;
-        private Label lblResultMessage;
-        private TextBox txtResult;
-        private TextBox txtResultCode;
-        private TextBox txtResultMessage;
-
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -130,338 +20,1110 @@ namespace MitsubishiLaserMES.WinForms.Forms
             base.Dispose(disposing);
         }
 
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
-            this.Text = "MES - " + DateTime.Now.ToString("yyyy/MM/dd");
-            this.Size = new Size(1180, 800);
-            this.MinimumSize = new Size(1100, 750);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Font = new Font("微軟正黑體", 9F, FontStyle.Regular);
+            this.components = new System.ComponentModel.Container();
 
-            // ================= 頂部區塊 =================
-            // 1. 當前作業人員
-            grpCurrentOperator = new GroupBox
-            {
-                Text = "當前作業人員 :",
-                Location = new Point(12, 8),
-                Size = new Size(260, 100)
-            };
-            lblOpId = new Label { Text = "工號:", Location = new Point(15, 28), AutoSize = true };
-            txtCurrentOpId = new TextBox { Location = new Point(65, 25), Size = new Size(180, 23), ReadOnly = true, BackColor = Color.WhiteSmoke };
-            lblOpName = new Label { Text = "姓名:", Location = new Point(15, 62), AutoSize = true };
-            txtCurrentOpName = new TextBox { Location = new Point(65, 59), Size = new Size(180, 23), ReadOnly = true, BackColor = Color.WhiteSmoke };
-            grpCurrentOperator.Controls.AddRange(new Control[] { lblOpId, txtCurrentOpId, lblOpName, txtCurrentOpName });
+            // 實例化頂部控制項
+            this.grpCurrentOperator = new System.Windows.Forms.GroupBox();
+            this.lblOpId = new System.Windows.Forms.Label();
+            this.txtCurrentOpId = new System.Windows.Forms.TextBox();
+            this.lblOpName = new System.Windows.Forms.Label();
+            this.txtCurrentOpName = new System.Windows.Forms.TextBox();
 
-            // 2. 帳密驗證
-            grpAuth = new GroupBox
-            {
-                Text = "帳密驗證",
-                Location = new Point(280, 8),
-                Size = new Size(540, 100)
-            };
-            lblBarcode = new Label { Text = "工號二維碼:", Location = new Point(12, 28), AutoSize = true };
-            txtBarcode = new TextBox { Location = new Point(95, 25), Size = new Size(300, 23) };
-            btnUserAuth = new Button { Text = "作業員帳號認證", Location = new Point(405, 23), Size = new Size(120, 28) };
+            this.grpAuth = new System.Windows.Forms.GroupBox();
+            this.lblBarcode = new System.Windows.Forms.Label();
+            this.txtBarcode = new System.Windows.Forms.TextBox();
+            this.btnUserAuth = new System.Windows.Forms.Button();
+            this.lblUserId = new System.Windows.Forms.Label();
+            this.txtLoginUserId = new System.Windows.Forms.TextBox();
+            this.lblPassword = new System.Windows.Forms.Label();
+            this.txtLoginPassword = new System.Windows.Forms.TextBox();
+            this.btnClearAuth = new System.Windows.Forms.Button();
 
-            lblUserId = new Label { Text = "工號:", Location = new Point(12, 62), AutoSize = true };
-            txtLoginUserId = new TextBox { Location = new Point(95, 59), Size = new Size(120, 23) };
-            lblPassword = new Label { Text = "密碼:", Location = new Point(225, 62), AutoSize = true };
-            txtLoginPassword = new TextBox { Location = new Point(265, 59), Size = new Size(130, 23), PasswordChar = '*' };
-            btnClearAuth = new Button { Text = "清除", Location = new Point(405, 57), Size = new Size(120, 28) };
-            grpAuth.Controls.AddRange(new Control[] { lblBarcode, txtBarcode, btnUserAuth, lblUserId, txtLoginUserId, lblPassword, txtLoginPassword, btnClearAuth });
+            this.btnSettings = new System.Windows.Forms.Button();
+            this.btnConnectMes = new System.Windows.Forms.Button();
+            this.btnToggleLang = new System.Windows.Forms.Button();
+            this.btnDisconnectMes = new System.Windows.Forms.Button();
+            this.pnlMqttLed = new System.Windows.Forms.Panel();
+            this.lblMqttLed = new System.Windows.Forms.Label();
 
-            // 3. 右上功能按鈕
-            btnSettings = new Button { Text = "MES 設定", Location = new Point(840, 18), Size = new Size(110, 32) };
-            btnConnectMes = new Button { Text = "MES 連線", Location = new Point(965, 18), Size = new Size(110, 32) };
-            btnToggleLang = new Button { Text = "中英切換", Location = new Point(840, 60), Size = new Size(110, 32) };
-            btnDisconnectMes = new Button { Text = "MES 離線", Location = new Point(965, 60), Size = new Size(110, 32) };
+            // 實例化主 Tab
+            this.tabMain = new System.Windows.Forms.TabControl();
+            this.tabWorkOrder = new System.Windows.Forms.TabPage();
+            this.tabEquipment = new System.Windows.Forms.TabPage();
+            this.tabItTest = new System.Windows.Forms.TabPage();
 
-            pnlMqttLed = new Panel { Location = new Point(1090, 26), Size = new Size(22, 22), BackColor = Color.LightGray, BorderStyle = BorderStyle.FixedSingle };
-            lblMqttLed = new Label { Text = "EAP", Location = new Point(1085, 53), AutoSize = true, Font = new Font("Arial", 8F, FontStyle.Bold) };
+            // 實例化 Tab 1 控制項
+            this.grpOrderInfo = new System.Windows.Forms.GroupBox();
+            this.lblWo = new System.Windows.Forms.Label();
+            this.txtWorkOrder = new System.Windows.Forms.TextBox();
+            this.lblBatchNo = new System.Windows.Forms.Label();
+            this.txtBatchNo = new System.Windows.Forms.TextBox();
+            this.lblPartNo = new System.Windows.Forms.Label();
+            this.txtPartNo = new System.Windows.Forms.TextBox();
+            this.lblProcessNo = new System.Windows.Forms.Label();
+            this.txtProcessNo = new System.Windows.Forms.TextBox();
+            this.lblProcessName = new System.Windows.Forms.Label();
+            this.txtProcessName = new System.Windows.Forms.TextBox();
+            this.lblTotalQty = new System.Windows.Forms.Label();
+            this.txtTotalQty = new System.Windows.Forms.TextBox();
+            this.lblRunQty = new System.Windows.Forms.Label();
+            this.txtRunQty = new System.Windows.Forms.TextBox();
+            this.lblCompletedQty = new System.Windows.Forms.Label();
+            this.txtCompletedQty = new System.Windows.Forms.TextBox();
+            this.lblRecipeId = new System.Windows.Forms.Label();
+            this.txtRecipeId = new System.Windows.Forms.TextBox();
+            this.lblIsTrackedIn = new System.Windows.Forms.Label();
+            this.txtIsTrackedIn = new System.Windows.Forms.TextBox();
+            this.lblComponentNo = new System.Windows.Forms.Label();
+            this.txtComponentNo = new System.Windows.Forms.TextBox();
 
-            // ================= 主 TabControl =================
-            tabMain = new TabControl
-            {
-                Location = new Point(12, 115),
-                Size = new Size(1140, 500),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
+            this.grpNgInput = new System.Windows.Forms.GroupBox();
+            this.chkNoNg = new System.Windows.Forms.CheckBox();
+            this.btnAddNg = new System.Windows.Forms.Button();
+            this.btnRemoveNg = new System.Windows.Forms.Button();
+            this.dgvNgList = new System.Windows.Forms.DataGridView();
 
-            tabWorkOrder = new TabPage { Text = "工單功能" };
-            tabEquipment = new TabPage { Text = "設備功能" };
-            tabItTest = new TabPage { Text = "IT 測試" };
-            tabMain.TabPages.AddRange(new TabPage[] { tabWorkOrder, tabEquipment, tabItTest });
+            this.grpTrackedInList = new System.Windows.Forms.GroupBox();
+            this.dgvTrackedIn = new System.Windows.Forms.DataGridView();
 
-            // ----------------- Tab 1: 工單功能 -----------------
-            // 工單訊息
-            grpOrderInfo = new GroupBox
-            {
-                Text = "工單訊息",
-                Location = new Point(10, 10),
-                Size = new Size(540, 230)
-            };
+            this.grpManageParams = new System.Windows.Forms.GroupBox();
+            this.dgvManageParams = new System.Windows.Forms.DataGridView();
 
-            lblWo = new Label { Text = "工單號碼 :", Location = new Point(15, 25), AutoSize = true };
-            txtWorkOrder = new TextBox { Location = new Point(95, 22), Size = new Size(160, 23) };
-            lblBatchNo = new Label { Text = "BatchNo :", Location = new Point(275, 25), AutoSize = true };
-            txtBatchNo = new TextBox { Location = new Point(365, 22), Size = new Size(160, 23) };
+            this.grpOrderActions = new System.Windows.Forms.GroupBox();
+            this.btnQueryOrder = new System.Windows.Forms.Button();
+            this.btnTrackIn = new System.Windows.Forms.Button();
+            this.btnTrackOut = new System.Windows.Forms.Button();
+            this.btnChangeUser = new System.Windows.Forms.Button();
+            this.btnClearOrder = new System.Windows.Forms.Button();
 
-            lblPartNo = new Label { Text = "料號 :", Location = new Point(15, 55), AutoSize = true };
-            txtPartNo = new TextBox { Location = new Point(95, 52), Size = new Size(160, 23) };
-            lblProcessNo = new Label { Text = "製程編號 :", Location = new Point(275, 55), AutoSize = true };
-            txtProcessNo = new TextBox { Location = new Point(365, 52), Size = new Size(160, 23) };
+            // 實例化 Tab 2 控制項
+            this.grpOpcStatus = new System.Windows.Forms.GroupBox();
+            this.lblOpcConn = new System.Windows.Forms.Label();
+            this.lblMachineState = new System.Windows.Forms.Label();
+            this.lblProgress = new System.Windows.Forms.Label();
+            this.lblActivePrg = new System.Windows.Forms.Label();
+            this.pnlLampGreen = new System.Windows.Forms.Panel();
+            this.lblLampGreen = new System.Windows.Forms.Label();
+            this.pnlLampYellow = new System.Windows.Forms.Panel();
+            this.lblLampYellow = new System.Windows.Forms.Label();
+            this.pnlLampRed = new System.Windows.Forms.Panel();
+            this.lblLampRed = new System.Windows.Forms.Label();
+            this.btnModeLocal = new System.Windows.Forms.Button();
+            this.btnModeSemiAuto = new System.Windows.Forms.Button();
+            this.btnModeAuto = new System.Windows.Forms.Button();
+            this.btnStartSchedule = new System.Windows.Forms.Button();
 
-            lblProcessName = new Label { Text = "製程名稱 :", Location = new Point(15, 85), AutoSize = true };
-            txtProcessName = new TextBox { Location = new Point(95, 82), Size = new Size(430, 23) };
+            this.grpAlarmList = new System.Windows.Forms.GroupBox();
+            this.dgvAlarms = new System.Windows.Forms.DataGridView();
 
-            lblTotalQty = new Label { Text = "工單數量 :", Location = new Point(15, 115), AutoSize = true };
-            txtTotalQty = new TextBox { Location = new Point(95, 112), Size = new Size(430, 23) };
+            // 實例化 Tab 3 控制項
+            this.grpTestActions = new System.Windows.Forms.GroupBox();
+            this.btnTestAlive = new System.Windows.Forms.Button();
+            this.btnTestProcessData = new System.Windows.Forms.Button();
+            this.btnTestAlarmStart = new System.Windows.Forms.Button();
+            this.btnTestAlarmEnd = new System.Windows.Forms.Button();
+            this.btnClearLogs = new System.Windows.Forms.Button();
+            this.grpLog = new System.Windows.Forms.GroupBox();
+            this.dgvMqttLogs = new System.Windows.Forms.DataGridView();
 
-            lblRunQty = new Label { Text = "工單跑貨片數 :", Location = new Point(15, 145), AutoSize = true };
-            txtRunQty = new TextBox { Location = new Point(105, 142), Size = new Size(150, 23) };
-            lblCompletedQty = new Label { Text = "已完成片數 :", Location = new Point(275, 145), AutoSize = true };
-            txtCompletedQty = new TextBox { Location = new Point(365, 142), Size = new Size(160, 23), ReadOnly = true, BackColor = Color.WhiteSmoke };
+            // 實例化底部控制項
+            this.grpResult = new System.Windows.Forms.GroupBox();
+            this.lblResult = new System.Windows.Forms.Label();
+            this.txtResult = new System.Windows.Forms.TextBox();
+            this.lblResultCode = new System.Windows.Forms.Label();
+            this.txtResultCode = new System.Windows.Forms.TextBox();
+            this.lblResultMessage = new System.Windows.Forms.Label();
+            this.txtResultMessage = new System.Windows.Forms.TextBox();
 
-            lblRecipeId = new Label { Text = "RecipeID :", Location = new Point(15, 175), AutoSize = true };
-            txtRecipeId = new TextBox { Location = new Point(95, 172), Size = new Size(430, 23) };
+            // BeginInit DataGridViews
+            ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvManageParams)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).BeginInit();
 
-            lblIsTrackedIn = new Label { Text = "是否已進站 :", Location = new Point(15, 203), AutoSize = true };
-            txtIsTrackedIn = new TextBox { Location = new Point(95, 200), Size = new Size(160, 23), ReadOnly = true, BackColor = Color.WhiteSmoke };
-            lblComponentNo = new Label { Text = "ComponentNo :", Location = new Point(265, 203), AutoSize = true };
-            txtComponentNo = new TextBox { Location = new Point(365, 200), Size = new Size(160, 23) };
+            this.grpCurrentOperator.SuspendLayout();
+            this.grpAuth.SuspendLayout();
+            this.tabMain.SuspendLayout();
+            this.tabWorkOrder.SuspendLayout();
+            this.tabEquipment.SuspendLayout();
+            this.tabItTest.SuspendLayout();
+            this.grpOrderInfo.SuspendLayout();
+            this.grpNgInput.SuspendLayout();
+            this.grpTrackedInList.SuspendLayout();
+            this.grpManageParams.SuspendLayout();
+            this.grpOrderActions.SuspendLayout();
+            this.grpOpcStatus.SuspendLayout();
+            this.grpAlarmList.SuspendLayout();
+            this.grpTestActions.SuspendLayout();
+            this.grpLog.SuspendLayout();
+            this.grpResult.SuspendLayout();
+            this.SuspendLayout();
 
-            grpOrderInfo.Controls.AddRange(new Control[]
-            {
-                lblWo, txtWorkOrder, lblBatchNo, txtBatchNo,
-                lblPartNo, txtPartNo, lblProcessNo, txtProcessNo,
-                lblProcessName, txtProcessName,
-                lblTotalQty, txtTotalQty,
-                lblRunQty, txtRunQty, lblCompletedQty, txtCompletedQty,
-                lblRecipeId, txtRecipeId,
-                lblIsTrackedIn, txtIsTrackedIn, lblComponentNo, txtComponentNo
-            });
+            // ================= grpCurrentOperator =================
+            this.grpCurrentOperator.Controls.Add(this.lblOpId);
+            this.grpCurrentOperator.Controls.Add(this.txtCurrentOpId);
+            this.grpCurrentOperator.Controls.Add(this.lblOpName);
+            this.grpCurrentOperator.Controls.Add(this.txtCurrentOpName);
+            this.grpCurrentOperator.Location = new System.Drawing.Point(12, 8);
+            this.grpCurrentOperator.Name = "grpCurrentOperator";
+            this.grpCurrentOperator.Size = new System.Drawing.Size(260, 100);
+            this.grpCurrentOperator.TabIndex = 0;
+            this.grpCurrentOperator.TabStop = false;
+            this.grpCurrentOperator.Text = "當前作業人員 :";
 
-            // 不良輸入
-            grpNgInput = new GroupBox
-            {
-                Text = "不良輸入",
-                Location = new Point(560, 10),
-                Size = new Size(380, 230)
-            };
-            chkNoNg = new CheckBox { Text = "本站無不良", Location = new Point(15, 20), AutoSize = true, Checked = true };
-            btnAddNg = new Button { Text = "新增不良", Location = new Point(200, 16), Size = new Size(80, 25) };
-            btnRemoveNg = new Button { Text = "刪除不良", Location = new Point(290, 16), Size = new Size(80, 25) };
+            this.lblOpId.AutoSize = true;
+            this.lblOpId.Location = new System.Drawing.Point(15, 28);
+            this.lblOpId.Name = "lblOpId";
+            this.lblOpId.Size = new System.Drawing.Size(35, 17);
+            this.lblOpId.TabIndex = 0;
+            this.lblOpId.Text = "工號:";
 
-            dgvNgList = new DataGridView
-            {
-                Location = new Point(15, 48),
-                Size = new Size(355, 170),
-                AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            dgvNgList.Columns.Add("NGCode", "NGCode");
-            dgvNgList.Columns.Add("NGChineseName", "NG Chinese Name");
-            dgvNgList.Columns.Add("Qty", "Qty");
-            grpNgInput.Controls.AddRange(new Control[] { chkNoNg, btnAddNg, btnRemoveNg, dgvNgList });
+            this.txtCurrentOpId.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.txtCurrentOpId.Location = new System.Drawing.Point(65, 25);
+            this.txtCurrentOpId.Name = "txtCurrentOpId";
+            this.txtCurrentOpId.ReadOnly = true;
+            this.txtCurrentOpId.Size = new System.Drawing.Size(180, 23);
+            this.txtCurrentOpId.TabIndex = 1;
 
-            // 工單作業按鈕區
-            grpOrderActions = new GroupBox
-            {
-                Text = "工單作業",
-                Location = new Point(955, 10),
-                Size = new Size(165, 455),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left
-            };
-            btnQueryOrder = new Button { Text = "工單查詢", Location = new Point(15, 25), Size = new Size(135, 38), Font = new Font("微軟正黑體", 10F, FontStyle.Bold) };
-            btnTrackIn = new Button { Text = "工單進站", Location = new Point(15, 75), Size = new Size(135, 38), Font = new Font("微軟正黑體", 10F, FontStyle.Bold), BackColor = Color.LightSteelBlue };
-            btnTrackOut = new Button { Text = "工單出站", Location = new Point(15, 125), Size = new Size(135, 38), Font = new Font("微軟正黑體", 10F, FontStyle.Bold), BackColor = Color.LightSkyBlue };
-            btnChangeUser = new Button { Text = "更換人員", Location = new Point(15, 210), Size = new Size(135, 34) };
-            btnClearOrder = new Button { Text = "清除", Location = new Point(15, 255), Size = new Size(135, 34) };
-            grpOrderActions.Controls.AddRange(new Control[] { btnQueryOrder, btnTrackIn, btnTrackOut, btnChangeUser, btnClearOrder });
+            this.lblOpName.AutoSize = true;
+            this.lblOpName.Location = new System.Drawing.Point(15, 62);
+            this.lblOpName.Name = "lblOpName";
+            this.lblOpName.Size = new System.Drawing.Size(35, 17);
+            this.lblOpName.TabIndex = 2;
+            this.lblOpName.Text = "姓名:";
 
-            // 已進站工單清單
-            grpTrackedInList = new GroupBox
-            {
-                Text = "已進站工單清單",
-                Location = new Point(10, 245),
-                Size = new Size(260, 220),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left
-            };
-            dgvTrackedIn = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AllowUserToAddRows = false,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            dgvTrackedIn.Columns.Add("WoNo", "工單號碼(WoNo)");
-            dgvTrackedIn.Columns.Add("Other1", "其他1");
-            grpTrackedInList.Controls.Add(dgvTrackedIn);
+            this.txtCurrentOpName.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.txtCurrentOpName.Location = new System.Drawing.Point(65, 59);
+            this.txtCurrentOpName.Name = "txtCurrentOpName";
+            this.txtCurrentOpName.ReadOnly = true;
+            this.txtCurrentOpName.Size = new System.Drawing.Size(180, 23);
+            this.txtCurrentOpName.TabIndex = 3;
 
-            // 管理項目 參數
-            grpManageParams = new GroupBox
-            {
-                Text = "管理項目 參 數",
-                Location = new Point(280, 245),
-                Size = new Size(660, 220),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
-            dgvManageParams = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            dgvManageParams.Columns.Add("Name", "管理項目名稱(Manage item name)");
-            dgvManageParams.Columns.Add("Value", "管理項目值(Manage item values)");
-            dgvManageParams.Columns.Add("MustInput", "需輸入?(Must Input?)");
-            dgvManageParams.Columns.Add("InputType", "輸入類型(Input type)");
-            grpManageParams.Controls.Add(dgvManageParams);
+            // ================= grpAuth =================
+            this.grpAuth.Controls.Add(this.lblBarcode);
+            this.grpAuth.Controls.Add(this.txtBarcode);
+            this.grpAuth.Controls.Add(this.btnUserAuth);
+            this.grpAuth.Controls.Add(this.lblUserId);
+            this.grpAuth.Controls.Add(this.txtLoginUserId);
+            this.grpAuth.Controls.Add(this.lblPassword);
+            this.grpAuth.Controls.Add(this.txtLoginPassword);
+            this.grpAuth.Controls.Add(this.btnClearAuth);
+            this.grpAuth.Location = new System.Drawing.Point(280, 8);
+            this.grpAuth.Name = "grpAuth";
+            this.grpAuth.Size = new System.Drawing.Size(540, 100);
+            this.grpAuth.TabIndex = 1;
+            this.grpAuth.TabStop = false;
+            this.grpAuth.Text = "帳密驗證";
 
-            tabWorkOrder.Controls.AddRange(new Control[]
-            {
-                grpOrderInfo, grpNgInput, grpOrderActions, grpTrackedInList, grpManageParams
-            });
+            this.lblBarcode.AutoSize = true;
+            this.lblBarcode.Location = new System.Drawing.Point(12, 28);
+            this.lblBarcode.Name = "lblBarcode";
+            this.lblBarcode.Size = new System.Drawing.Size(71, 17);
+            this.lblBarcode.TabIndex = 0;
+            this.lblBarcode.Text = "工號二維碼:";
 
-            // ----------------- Tab 2: 設備功能 -----------------
-            grpOpcStatus = new GroupBox
-            {
-                Text = "三菱雷射機狀態與控制 (OPC UA)",
-                Location = new Point(15, 15),
-                Size = new Size(1095, 180)
-            };
-            lblOpcConn = new Label { Text = "OPC 連線: 離線中", Location = new Point(20, 30), AutoSize = true, Font = new Font("微軟正黑體", 10F, FontStyle.Bold) };
-            lblMachineState = new Label { Text = "機台狀態代碼: [3] Idle", Location = new Point(220, 30), AutoSize = true, Font = new Font("微軟正黑體", 10F, FontStyle.Bold) };
-            lblProgress = new Label { Text = "加工計數: 0 / 0", Location = new Point(480, 30), AutoSize = true, Font = new Font("微軟正黑體", 10F) };
-            lblActivePrg = new Label { Text = "目前加工程式: 無", Location = new Point(20, 65), AutoSize = true };
+            this.txtBarcode.Location = new System.Drawing.Point(95, 25);
+            this.txtBarcode.Name = "txtBarcode";
+            this.txtBarcode.Size = new System.Drawing.Size(300, 23);
+            this.txtBarcode.TabIndex = 1;
 
-            // 三色燈視覺
-            pnlLampGreen = new Panel { Location = new Point(20, 100), Size = new Size(24, 24), BackColor = Color.DarkGreen, BorderStyle = BorderStyle.FixedSingle };
-            lblLampGreen = new Label { Text = "綠燈 (伺服ON/運行)", Location = new Point(50, 104), AutoSize = true };
+            this.btnUserAuth.Location = new System.Drawing.Point(405, 23);
+            this.btnUserAuth.Name = "btnUserAuth";
+            this.btnUserAuth.Size = new System.Drawing.Size(120, 28);
+            this.btnUserAuth.TabIndex = 2;
+            this.btnUserAuth.Text = "作業員帳號認證";
+            this.btnUserAuth.UseVisualStyleBackColor = true;
 
-            pnlLampYellow = new Panel { Location = new Point(200, 100), Size = new Size(24, 24), BackColor = Color.DarkGoldenrod, BorderStyle = BorderStyle.FixedSingle };
-            lblLampYellow = new Label { Text = "黃燈 (待機/BeamON)", Location = new Point(230, 104), AutoSize = true };
+            this.lblUserId.AutoSize = true;
+            this.lblUserId.Location = new System.Drawing.Point(12, 62);
+            this.lblUserId.Name = "lblUserId";
+            this.lblUserId.Size = new System.Drawing.Size(35, 17);
+            this.lblUserId.TabIndex = 3;
+            this.lblUserId.Text = "工號:";
 
-            pnlLampRed = new Panel { Location = new Point(380, 100), Size = new Size(24, 24), BackColor = Color.DarkRed, BorderStyle = BorderStyle.FixedSingle };
-            lblLampRed = new Label { Text = "紅燈 (警報/異常)", Location = new Point(410, 104), AutoSize = true };
+            this.txtLoginUserId.Location = new System.Drawing.Point(95, 59);
+            this.txtLoginUserId.Name = "txtLoginUserId";
+            this.txtLoginUserId.Size = new System.Drawing.Size(120, 23);
+            this.txtLoginUserId.TabIndex = 4;
 
-            // 控制按鈕
-            btnModeLocal = new Button { Text = "Local 模式", Location = new Point(600, 95), Size = new Size(95, 32) };
-            btnModeSemiAuto = new Button { Text = "Semi-Auto 模式", Location = new Point(705, 95), Size = new Size(115, 32) };
-            btnModeAuto = new Button { Text = "Auto 模式", Location = new Point(830, 95), Size = new Size(95, 32) };
-            btnStartSchedule = new Button { Text = "啟動連續運轉", Location = new Point(940, 95), Size = new Size(125, 32), BackColor = Color.PaleGreen };
+            this.lblPassword.AutoSize = true;
+            this.lblPassword.Location = new System.Drawing.Point(225, 62);
+            this.lblPassword.Name = "lblPassword";
+            this.lblPassword.Size = new System.Drawing.Size(35, 17);
+            this.lblPassword.TabIndex = 5;
+            this.lblPassword.Text = "密碼:";
 
-            grpOpcStatus.Controls.AddRange(new Control[]
-            {
-                lblOpcConn, lblMachineState, lblProgress, lblActivePrg,
-                pnlLampGreen, lblLampGreen, pnlLampYellow, lblLampYellow, pnlLampRed, lblLampRed,
-                btnModeLocal, btnModeSemiAuto, btnModeAuto, btnStartSchedule
-            });
+            this.txtLoginPassword.Location = new System.Drawing.Point(265, 59);
+            this.txtLoginPassword.Name = "txtLoginPassword";
+            this.txtLoginPassword.PasswordChar = '*';
+            this.txtLoginPassword.Size = new System.Drawing.Size(130, 23);
+            this.txtLoginPassword.TabIndex = 6;
 
-            grpAlarmList = new GroupBox
-            {
-                Text = "當前活躍警報清單 (Active Alarms 000~009)",
-                Location = new Point(15, 205),
-                Size = new Size(1095, 260),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
-            dgvAlarms = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AllowUserToAddRows = false,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            dgvAlarms.Columns.Add("AlarmCode", "警報代碼");
-            dgvAlarms.Columns.Add("AlarmMsg", "警報訊息內容");
-            dgvAlarms.Columns.Add("AlarmType", "等級");
-            dgvAlarms.Columns.Add("Time", "偵測時間");
-            grpAlarmList.Controls.Add(dgvAlarms);
+            this.btnClearAuth.Location = new System.Drawing.Point(405, 57);
+            this.btnClearAuth.Name = "btnClearAuth";
+            this.btnClearAuth.Size = new System.Drawing.Size(120, 28);
+            this.btnClearAuth.TabIndex = 7;
+            this.btnClearAuth.Text = "清除";
+            this.btnClearAuth.UseVisualStyleBackColor = true;
 
-            tabEquipment.Controls.AddRange(new Control[] { grpOpcStatus, grpAlarmList });
+            // ================= 頂部右側按鈕 =================
+            this.btnSettings.Location = new System.Drawing.Point(840, 18);
+            this.btnSettings.Name = "btnSettings";
+            this.btnSettings.Size = new System.Drawing.Size(110, 32);
+            this.btnSettings.TabIndex = 2;
+            this.btnSettings.Text = "MES 設定";
+            this.btnSettings.UseVisualStyleBackColor = true;
 
-            // ----------------- Tab 3: IT 測試 -----------------
-            grpTestActions = new GroupBox
-            {
-                Text = "MQTT 通訊測試與模擬工具",
-                Location = new Point(15, 15),
-                Size = new Size(1095, 80)
-            };
-            btnTestAlive = new Button { Text = "測試存活檢測 (AreYouThere)", Location = new Point(15, 28), Size = new Size(190, 35) };
-            btnTestProcessData = new Button { Text = "模擬製程資料上報", Location = new Point(220, 28), Size = new Size(160, 35) };
-            btnTestAlarmStart = new Button { Text = "模擬警報發生 (Start)", Location = new Point(395, 28), Size = new Size(160, 35) };
-            btnTestAlarmEnd = new Button { Text = "模擬警報解除 (End)", Location = new Point(570, 28), Size = new Size(160, 35) };
-            btnClearLogs = new Button { Text = "清空通訊日誌", Location = new Point(745, 28), Size = new Size(120, 35) };
-            grpTestActions.Controls.AddRange(new Control[] { btnTestAlive, btnTestProcessData, btnTestAlarmStart, btnTestAlarmEnd, btnClearLogs });
+            this.btnConnectMes.Location = new System.Drawing.Point(965, 18);
+            this.btnConnectMes.Name = "btnConnectMes";
+            this.btnConnectMes.Size = new System.Drawing.Size(110, 32);
+            this.btnConnectMes.TabIndex = 3;
+            this.btnConnectMes.Text = "MES 連線";
+            this.btnConnectMes.UseVisualStyleBackColor = true;
 
-            var grpLog = new GroupBox
-            {
-                Text = "MQTT 即時封包監聽紀錄",
-                Location = new Point(15, 105),
-                Size = new Size(1095, 360),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
-            dgvMqttLogs = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AllowUserToAddRows = false,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            dgvMqttLogs.Columns.Add("Time", "時間");
-            dgvMqttLogs.Columns.Add("Direction", "方向");
-            dgvMqttLogs.Columns.Add("Topic", "主題 (Topic)");
-            dgvMqttLogs.Columns.Add("Payload", "訊息內文 (JSON Payload)");
-            grpLog.Controls.Add(dgvMqttLogs);
+            this.btnToggleLang.Location = new System.Drawing.Point(840, 60);
+            this.btnToggleLang.Name = "btnToggleLang";
+            this.btnToggleLang.Size = new System.Drawing.Size(110, 32);
+            this.btnToggleLang.TabIndex = 4;
+            this.btnToggleLang.Text = "中英切換";
+            this.btnToggleLang.UseVisualStyleBackColor = true;
 
-            tabItTest.Controls.AddRange(new Control[] { grpTestActions, grpLog });
+            this.btnDisconnectMes.Location = new System.Drawing.Point(965, 60);
+            this.btnDisconnectMes.Name = "btnDisconnectMes";
+            this.btnDisconnectMes.Size = new System.Drawing.Size(110, 32);
+            this.btnDisconnectMes.TabIndex = 5;
+            this.btnDisconnectMes.Text = "MES 離線";
+            this.btnDisconnectMes.UseVisualStyleBackColor = true;
 
-            // ================= 底部執行結果區 =================
-            grpResult = new GroupBox
-            {
-                Text = "執行結果",
-                Location = new Point(12, 620),
-                Size = new Size(1140, 130),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
+            this.pnlMqttLed.BackColor = System.Drawing.Color.LightGray;
+            this.pnlMqttLed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlMqttLed.Location = new System.Drawing.Point(1090, 26);
+            this.pnlMqttLed.Name = "pnlMqttLed";
+            this.pnlMqttLed.Size = new System.Drawing.Size(22, 22);
+            this.pnlMqttLed.TabIndex = 6;
 
-            lblResult = new Label { Text = "Result :", Location = new Point(15, 25), AutoSize = true };
-            txtResult = new TextBox { Location = new Point(75, 22), Size = new Size(120, 23), ReadOnly = true, Font = new Font("微軟正黑體", 9.5F, FontStyle.Bold) };
+            this.lblMqttLed.AutoSize = true;
+            this.lblMqttLed.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold);
+            this.lblMqttLed.Location = new System.Drawing.Point(1085, 53);
+            this.lblMqttLed.Name = "lblMqttLed";
+            this.lblMqttLed.Size = new System.Drawing.Size(29, 14);
+            this.lblMqttLed.TabIndex = 7;
+            this.lblMqttLed.Text = "EAP";
 
-            lblResultCode = new Label { Text = "ResultCode :", Location = new Point(15, 58), AutoSize = true };
-            txtResultCode = new TextBox { Location = new Point(95, 55), Size = new Size(100, 23), ReadOnly = true };
+            // ================= tabMain =================
+            this.tabMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabMain.Controls.Add(this.tabWorkOrder);
+            this.tabMain.Controls.Add(this.tabEquipment);
+            this.tabMain.Controls.Add(this.tabItTest);
+            this.tabMain.Location = new System.Drawing.Point(12, 115);
+            this.tabMain.Name = "tabMain";
+            this.tabMain.SelectedIndex = 0;
+            this.tabMain.Size = new System.Drawing.Size(1140, 500);
+            this.tabMain.TabIndex = 8;
 
-            lblResultMessage = new Label { Text = "ResultMessage :", Location = new Point(220, 25), AutoSize = true };
-            txtResultMessage = new TextBox
-            {
-                Location = new Point(325, 22),
-                Size = new Size(800, 95),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Multiline = true,
-                ReadOnly = true,
-                ScrollBars = ScrollBars.Vertical,
-                BackColor = Color.WhiteSmoke
-            };
+            // ================= tabWorkOrder =================
+            this.tabWorkOrder.Controls.Add(this.grpOrderInfo);
+            this.tabWorkOrder.Controls.Add(this.grpNgInput);
+            this.tabWorkOrder.Controls.Add(this.grpOrderActions);
+            this.tabWorkOrder.Controls.Add(this.grpTrackedInList);
+            this.tabWorkOrder.Controls.Add(this.grpManageParams);
+            this.tabWorkOrder.Location = new System.Drawing.Point(4, 26);
+            this.tabWorkOrder.Name = "tabWorkOrder";
+            this.tabWorkOrder.Padding = new System.Windows.Forms.Padding(3);
+            this.tabWorkOrder.Size = new System.Drawing.Size(1132, 470);
+            this.tabWorkOrder.TabIndex = 0;
+            this.tabWorkOrder.Text = "工單功能";
+            this.tabWorkOrder.UseVisualStyleBackColor = true;
 
-            grpResult.Controls.AddRange(new Control[]
-            {
-                lblResult, txtResult, lblResultCode, txtResultCode, lblResultMessage, txtResultMessage
-            });
+            // --- grpOrderInfo ---
+            this.grpOrderInfo.Controls.Add(this.lblWo);
+            this.grpOrderInfo.Controls.Add(this.txtWorkOrder);
+            this.grpOrderInfo.Controls.Add(this.lblBatchNo);
+            this.grpOrderInfo.Controls.Add(this.txtBatchNo);
+            this.grpOrderInfo.Controls.Add(this.lblPartNo);
+            this.grpOrderInfo.Controls.Add(this.txtPartNo);
+            this.grpOrderInfo.Controls.Add(this.lblProcessNo);
+            this.grpOrderInfo.Controls.Add(this.txtProcessNo);
+            this.grpOrderInfo.Controls.Add(this.lblProcessName);
+            this.grpOrderInfo.Controls.Add(this.txtProcessName);
+            this.grpOrderInfo.Controls.Add(this.lblTotalQty);
+            this.grpOrderInfo.Controls.Add(this.txtTotalQty);
+            this.grpOrderInfo.Controls.Add(this.lblRunQty);
+            this.grpOrderInfo.Controls.Add(this.txtRunQty);
+            this.grpOrderInfo.Controls.Add(this.lblCompletedQty);
+            this.grpOrderInfo.Controls.Add(this.txtCompletedQty);
+            this.grpOrderInfo.Controls.Add(this.lblRecipeId);
+            this.grpOrderInfo.Controls.Add(this.txtRecipeId);
+            this.grpOrderInfo.Controls.Add(this.lblIsTrackedIn);
+            this.grpOrderInfo.Controls.Add(this.txtIsTrackedIn);
+            this.grpOrderInfo.Controls.Add(this.lblComponentNo);
+            this.grpOrderInfo.Controls.Add(this.txtComponentNo);
+            this.grpOrderInfo.Location = new System.Drawing.Point(10, 10);
+            this.grpOrderInfo.Name = "grpOrderInfo";
+            this.grpOrderInfo.Size = new System.Drawing.Size(540, 230);
+            this.grpOrderInfo.TabIndex = 0;
+            this.grpOrderInfo.TabStop = false;
+            this.grpOrderInfo.Text = "工單訊息";
 
-            // 根表單配置
-            this.Controls.AddRange(new Control[]
-            {
-                grpCurrentOperator, grpAuth,
-                btnSettings, btnConnectMes, btnToggleLang, btnDisconnectMes,
-                pnlMqttLed, lblMqttLed,
-                tabMain,
-                grpResult
-            });
+            this.lblWo.AutoSize = true;
+            this.lblWo.Location = new System.Drawing.Point(15, 25);
+            this.lblWo.Name = "lblWo";
+            this.lblWo.Size = new System.Drawing.Size(65, 17);
+            this.lblWo.TabIndex = 0;
+            this.lblWo.Text = "工單號碼 :";
+
+            this.txtWorkOrder.Location = new System.Drawing.Point(95, 22);
+            this.txtWorkOrder.Name = "txtWorkOrder";
+            this.txtWorkOrder.Size = new System.Drawing.Size(160, 23);
+            this.txtWorkOrder.TabIndex = 1;
+
+            this.lblBatchNo.AutoSize = true;
+            this.lblBatchNo.Location = new System.Drawing.Point(275, 25);
+            this.lblBatchNo.Name = "lblBatchNo";
+            this.lblBatchNo.Size = new System.Drawing.Size(62, 17);
+            this.lblBatchNo.TabIndex = 2;
+            this.lblBatchNo.Text = "BatchNo :";
+
+            this.txtBatchNo.Location = new System.Drawing.Point(365, 22);
+            this.txtBatchNo.Name = "txtBatchNo";
+            this.txtBatchNo.Size = new System.Drawing.Size(160, 23);
+            this.txtBatchNo.TabIndex = 3;
+
+            this.lblPartNo.AutoSize = true;
+            this.lblPartNo.Location = new System.Drawing.Point(15, 55);
+            this.lblPartNo.Name = "lblPartNo";
+            this.lblPartNo.Size = new System.Drawing.Size(41, 17);
+            this.lblPartNo.TabIndex = 4;
+            this.lblPartNo.Text = "料號 :";
+
+            this.txtPartNo.Location = new System.Drawing.Point(95, 52);
+            this.txtPartNo.Name = "txtPartNo";
+            this.txtPartNo.Size = new System.Drawing.Size(160, 23);
+            this.txtPartNo.TabIndex = 5;
+
+            this.lblProcessNo.AutoSize = true;
+            this.lblProcessNo.Location = new System.Drawing.Point(275, 55);
+            this.lblProcessNo.Name = "lblProcessNo";
+            this.lblProcessNo.Size = new System.Drawing.Size(65, 17);
+            this.lblProcessNo.TabIndex = 6;
+            this.lblProcessNo.Text = "製程編號 :";
+
+            this.txtProcessNo.Location = new System.Drawing.Point(365, 52);
+            this.txtProcessNo.Name = "txtProcessNo";
+            this.txtProcessNo.Size = new System.Drawing.Size(160, 23);
+            this.txtProcessNo.TabIndex = 7;
+
+            this.lblProcessName.AutoSize = true;
+            this.lblProcessName.Location = new System.Drawing.Point(15, 85);
+            this.lblProcessName.Name = "lblProcessName";
+            this.lblProcessName.Size = new System.Drawing.Size(65, 17);
+            this.lblProcessName.TabIndex = 8;
+            this.lblProcessName.Text = "製程名稱 :";
+
+            this.txtProcessName.Location = new System.Drawing.Point(95, 82);
+            this.txtProcessName.Name = "txtProcessName";
+            this.txtProcessName.Size = new System.Drawing.Size(430, 23);
+            this.txtProcessName.TabIndex = 9;
+
+            this.lblTotalQty.AutoSize = true;
+            this.lblTotalQty.Location = new System.Drawing.Point(15, 115);
+            this.lblTotalQty.Name = "lblTotalQty";
+            this.lblTotalQty.Size = new System.Drawing.Size(65, 17);
+            this.lblTotalQty.TabIndex = 10;
+            this.lblTotalQty.Text = "工單數量 :";
+
+            this.txtTotalQty.Location = new System.Drawing.Point(95, 112);
+            this.txtTotalQty.Name = "txtTotalQty";
+            this.txtTotalQty.Size = new System.Drawing.Size(430, 23);
+            this.txtTotalQty.TabIndex = 11;
+
+            this.lblRunQty.AutoSize = true;
+            this.lblRunQty.Location = new System.Drawing.Point(15, 145);
+            this.lblRunQty.Name = "lblRunQty";
+            this.lblRunQty.Size = new System.Drawing.Size(89, 17);
+            this.lblRunQty.TabIndex = 12;
+            this.lblRunQty.Text = "工單跑貨片數 :";
+
+            this.txtRunQty.Location = new System.Drawing.Point(105, 142);
+            this.txtRunQty.Name = "txtRunQty";
+            this.txtRunQty.Size = new System.Drawing.Size(150, 23);
+            this.txtRunQty.TabIndex = 13;
+
+            this.lblCompletedQty.AutoSize = true;
+            this.lblCompletedQty.Location = new System.Drawing.Point(275, 145);
+            this.lblCompletedQty.Name = "lblCompletedQty";
+            this.lblCompletedQty.Size = new System.Drawing.Size(77, 17);
+            this.lblCompletedQty.TabIndex = 14;
+            this.lblCompletedQty.Text = "已完成片數 :";
+
+            this.txtCompletedQty.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.txtCompletedQty.Location = new System.Drawing.Point(365, 142);
+            this.txtCompletedQty.Name = "txtCompletedQty";
+            this.txtCompletedQty.ReadOnly = true;
+            this.txtCompletedQty.Size = new System.Drawing.Size(160, 23);
+            this.txtCompletedQty.TabIndex = 15;
+
+            this.lblRecipeId.AutoSize = true;
+            this.lblRecipeId.Location = new System.Drawing.Point(15, 175);
+            this.lblRecipeId.Name = "lblRecipeId";
+            this.lblRecipeId.Size = new System.Drawing.Size(64, 17);
+            this.lblRecipeId.TabIndex = 16;
+            this.lblRecipeId.Text = "RecipeID :";
+
+            this.txtRecipeId.Location = new System.Drawing.Point(95, 172);
+            this.txtRecipeId.Name = "txtRecipeId";
+            this.txtRecipeId.Size = new System.Drawing.Size(430, 23);
+            this.txtRecipeId.TabIndex = 17;
+
+            this.lblIsTrackedIn.AutoSize = true;
+            this.lblIsTrackedIn.Location = new System.Drawing.Point(15, 203);
+            this.lblIsTrackedIn.Name = "lblIsTrackedIn";
+            this.lblIsTrackedIn.Size = new System.Drawing.Size(77, 17);
+            this.lblIsTrackedIn.TabIndex = 18;
+            this.lblIsTrackedIn.Text = "是否已進站 :";
+
+            this.txtIsTrackedIn.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.txtIsTrackedIn.Location = new System.Drawing.Point(95, 200);
+            this.txtIsTrackedIn.Name = "txtIsTrackedIn";
+            this.txtIsTrackedIn.ReadOnly = true;
+            this.txtIsTrackedIn.Size = new System.Drawing.Size(160, 23);
+            this.txtIsTrackedIn.TabIndex = 19;
+
+            this.lblComponentNo.AutoSize = true;
+            this.lblComponentNo.Location = new System.Drawing.Point(265, 203);
+            this.lblComponentNo.Name = "lblComponentNo";
+            this.lblComponentNo.Size = new System.Drawing.Size(97, 17);
+            this.lblComponentNo.TabIndex = 20;
+            this.lblComponentNo.Text = "ComponentNo :";
+
+            this.txtComponentNo.Location = new System.Drawing.Point(365, 200);
+            this.txtComponentNo.Name = "txtComponentNo";
+            this.txtComponentNo.Size = new System.Drawing.Size(160, 23);
+            this.txtComponentNo.TabIndex = 21;
+
+            // --- grpNgInput ---
+            this.grpNgInput.Controls.Add(this.chkNoNg);
+            this.grpNgInput.Controls.Add(this.btnAddNg);
+            this.grpNgInput.Controls.Add(this.btnRemoveNg);
+            this.grpNgInput.Controls.Add(this.dgvNgList);
+            this.grpNgInput.Location = new System.Drawing.Point(560, 10);
+            this.grpNgInput.Name = "grpNgInput";
+            this.grpNgInput.Size = new System.Drawing.Size(380, 230);
+            this.grpNgInput.TabIndex = 1;
+            this.grpNgInput.TabStop = false;
+            this.grpNgInput.Text = "不良輸入";
+
+            this.chkNoNg.AutoSize = true;
+            this.chkNoNg.Checked = true;
+            this.chkNoNg.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkNoNg.Location = new System.Drawing.Point(15, 20);
+            this.chkNoNg.Name = "chkNoNg";
+            this.chkNoNg.Size = new System.Drawing.Size(87, 21);
+            this.chkNoNg.TabIndex = 0;
+            this.chkNoNg.Text = "本站無不良";
+            this.chkNoNg.UseVisualStyleBackColor = true;
+
+            this.btnAddNg.Location = new System.Drawing.Point(200, 16);
+            this.btnAddNg.Name = "btnAddNg";
+            this.btnAddNg.Size = new System.Drawing.Size(80, 25);
+            this.btnAddNg.TabIndex = 1;
+            this.btnAddNg.Text = "新增不良";
+            this.btnAddNg.UseVisualStyleBackColor = true;
+
+            this.btnRemoveNg.Location = new System.Drawing.Point(290, 16);
+            this.btnRemoveNg.Name = "btnRemoveNg";
+            this.btnRemoveNg.Size = new System.Drawing.Size(80, 25);
+            this.btnRemoveNg.TabIndex = 2;
+            this.btnRemoveNg.Text = "刪除不良";
+            this.btnRemoveNg.UseVisualStyleBackColor = true;
+
+            this.dgvNgList.AllowUserToAddRows = false;
+            this.dgvNgList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvNgList.BackgroundColor = System.Drawing.Color.White;
+            this.dgvNgList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvNgList.Location = new System.Drawing.Point(15, 48);
+            this.dgvNgList.Name = "dgvNgList";
+            this.dgvNgList.RowTemplate.Height = 25;
+            this.dgvNgList.Size = new System.Drawing.Size(355, 170);
+            this.dgvNgList.TabIndex = 3;
+
+            // --- grpTrackedInList ---
+            this.grpTrackedInList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.grpTrackedInList.Controls.Add(this.dgvTrackedIn);
+            this.grpTrackedInList.Location = new System.Drawing.Point(10, 245);
+            this.grpTrackedInList.Name = "grpTrackedInList";
+            this.grpTrackedInList.Size = new System.Drawing.Size(260, 220);
+            this.grpTrackedInList.TabIndex = 2;
+            this.grpTrackedInList.TabStop = false;
+            this.grpTrackedInList.Text = "已進站工單清單";
+
+            this.dgvTrackedIn.AllowUserToAddRows = false;
+            this.dgvTrackedIn.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvTrackedIn.BackgroundColor = System.Drawing.Color.White;
+            this.dgvTrackedIn.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTrackedIn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvTrackedIn.Location = new System.Drawing.Point(3, 19);
+            this.dgvTrackedIn.Name = "dgvTrackedIn";
+            this.dgvTrackedIn.ReadOnly = true;
+            this.dgvTrackedIn.RowTemplate.Height = 25;
+            this.dgvTrackedIn.Size = new System.Drawing.Size(254, 198);
+            this.dgvTrackedIn.TabIndex = 0;
+
+            // --- grpManageParams ---
+            this.grpManageParams.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpManageParams.Controls.Add(this.dgvManageParams);
+            this.grpManageParams.Location = new System.Drawing.Point(280, 245);
+            this.grpManageParams.Name = "grpManageParams";
+            this.grpManageParams.Size = new System.Drawing.Size(660, 220);
+            this.grpManageParams.TabIndex = 3;
+            this.grpManageParams.TabStop = false;
+            this.grpManageParams.Text = "管理項目 參 數";
+
+            this.dgvManageParams.AllowUserToAddRows = false;
+            this.dgvManageParams.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvManageParams.BackgroundColor = System.Drawing.Color.White;
+            this.dgvManageParams.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvManageParams.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvManageParams.Location = new System.Drawing.Point(3, 19);
+            this.dgvManageParams.Name = "dgvManageParams";
+            this.dgvManageParams.RowTemplate.Height = 25;
+            this.dgvManageParams.Size = new System.Drawing.Size(654, 198);
+            this.dgvManageParams.TabIndex = 0;
+
+            // --- grpOrderActions ---
+            this.grpOrderActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.grpOrderActions.Controls.Add(this.btnQueryOrder);
+            this.grpOrderActions.Controls.Add(this.btnTrackIn);
+            this.grpOrderActions.Controls.Add(this.btnTrackOut);
+            this.grpOrderActions.Controls.Add(this.btnChangeUser);
+            this.grpOrderActions.Controls.Add(this.btnClearOrder);
+            this.grpOrderActions.Location = new System.Drawing.Point(955, 10);
+            this.grpOrderActions.Name = "grpOrderActions";
+            this.grpOrderActions.Size = new System.Drawing.Size(165, 455);
+            this.grpOrderActions.TabIndex = 4;
+            this.grpOrderActions.TabStop = false;
+            this.grpOrderActions.Text = "工單作業";
+
+            this.btnQueryOrder.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
+            this.btnQueryOrder.Location = new System.Drawing.Point(15, 25);
+            this.btnQueryOrder.Name = "btnQueryOrder";
+            this.btnQueryOrder.Size = new System.Drawing.Size(135, 38);
+            this.btnQueryOrder.TabIndex = 0;
+            this.btnQueryOrder.Text = "工單查詢";
+            this.btnQueryOrder.UseVisualStyleBackColor = true;
+
+            this.btnTrackIn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.btnTrackIn.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
+            this.btnTrackIn.Location = new System.Drawing.Point(15, 75);
+            this.btnTrackIn.Name = "btnTrackIn";
+            this.btnTrackIn.Size = new System.Drawing.Size(135, 38);
+            this.btnTrackIn.TabIndex = 1;
+            this.btnTrackIn.Text = "工單進站";
+            this.btnTrackIn.UseVisualStyleBackColor = false;
+
+            this.btnTrackOut.BackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnTrackOut.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
+            this.btnTrackOut.Location = new System.Drawing.Point(15, 125);
+            this.btnTrackOut.Name = "btnTrackOut";
+            this.btnTrackOut.Size = new System.Drawing.Size(135, 38);
+            this.btnTrackOut.TabIndex = 2;
+            this.btnTrackOut.Text = "工單出站";
+            this.btnTrackOut.UseVisualStyleBackColor = false;
+
+            this.btnChangeUser.Location = new System.Drawing.Point(15, 210);
+            this.btnChangeUser.Name = "btnChangeUser";
+            this.btnChangeUser.Size = new System.Drawing.Size(135, 34);
+            this.btnChangeUser.TabIndex = 3;
+            this.btnChangeUser.Text = "更換人員";
+            this.btnChangeUser.UseVisualStyleBackColor = true;
+
+            this.btnClearOrder.Location = new System.Drawing.Point(15, 255);
+            this.btnClearOrder.Name = "btnClearOrder";
+            this.btnClearOrder.Size = new System.Drawing.Size(135, 34);
+            this.btnClearOrder.TabIndex = 4;
+            this.btnClearOrder.Text = "清除";
+            this.btnClearOrder.UseVisualStyleBackColor = true;
+
+            // ================= tabEquipment =================
+            this.tabEquipment.Controls.Add(this.grpOpcStatus);
+            this.tabEquipment.Controls.Add(this.grpAlarmList);
+            this.tabEquipment.Location = new System.Drawing.Point(4, 26);
+            this.tabEquipment.Name = "tabEquipment";
+            this.tabEquipment.Padding = new System.Windows.Forms.Padding(3);
+            this.tabEquipment.Size = new System.Drawing.Size(1132, 470);
+            this.tabEquipment.TabIndex = 1;
+            this.tabEquipment.Text = "設備功能";
+            this.tabEquipment.UseVisualStyleBackColor = true;
+
+            // --- grpOpcStatus ---
+            this.grpOpcStatus.Controls.Add(this.lblOpcConn);
+            this.grpOpcStatus.Controls.Add(this.lblMachineState);
+            this.grpOpcStatus.Controls.Add(this.lblProgress);
+            this.grpOpcStatus.Controls.Add(this.lblActivePrg);
+            this.grpOpcStatus.Controls.Add(this.pnlLampGreen);
+            this.grpOpcStatus.Controls.Add(this.lblLampGreen);
+            this.grpOpcStatus.Controls.Add(this.pnlLampYellow);
+            this.grpOpcStatus.Controls.Add(this.lblLampYellow);
+            this.grpOpcStatus.Controls.Add(this.pnlLampRed);
+            this.grpOpcStatus.Controls.Add(this.lblLampRed);
+            this.grpOpcStatus.Controls.Add(this.btnModeLocal);
+            this.grpOpcStatus.Controls.Add(this.btnModeSemiAuto);
+            this.grpOpcStatus.Controls.Add(this.btnModeAuto);
+            this.grpOpcStatus.Controls.Add(this.btnStartSchedule);
+            this.grpOpcStatus.Location = new System.Drawing.Point(15, 15);
+            this.grpOpcStatus.Name = "grpOpcStatus";
+            this.grpOpcStatus.Size = new System.Drawing.Size(1095, 180);
+            this.grpOpcStatus.TabIndex = 0;
+            this.grpOpcStatus.TabStop = false;
+            this.grpOpcStatus.Text = "三菱雷射機狀態與控制 (OPC UA)";
+
+            this.lblOpcConn.AutoSize = true;
+            this.lblOpcConn.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
+            this.lblOpcConn.Location = new System.Drawing.Point(20, 30);
+            this.lblOpcConn.Name = "lblOpcConn";
+            this.lblOpcConn.Size = new System.Drawing.Size(105, 18);
+            this.lblOpcConn.TabIndex = 0;
+            this.lblOpcConn.Text = "OPC 連線: 離線中";
+
+            this.lblMachineState.AutoSize = true;
+            this.lblMachineState.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
+            this.lblMachineState.Location = new System.Drawing.Point(220, 30);
+            this.lblMachineState.Name = "lblMachineState";
+            this.lblMachineState.Size = new System.Drawing.Size(139, 18);
+            this.lblMachineState.TabIndex = 1;
+            this.lblMachineState.Text = "機台狀態代碼: [3] Idle";
+
+            this.lblProgress.AutoSize = true;
+            this.lblProgress.Font = new System.Drawing.Font("微軟正黑體", 10F);
+            this.lblProgress.Location = new System.Drawing.Point(480, 30);
+            this.lblProgress.Name = "lblProgress";
+            this.lblProgress.Size = new System.Drawing.Size(95, 18);
+            this.lblProgress.TabIndex = 2;
+            this.lblProgress.Text = "加工計數: 0 / 0";
+
+            this.lblActivePrg.AutoSize = true;
+            this.lblActivePrg.Location = new System.Drawing.Point(20, 65);
+            this.lblActivePrg.Name = "lblActivePrg";
+            this.lblActivePrg.Size = new System.Drawing.Size(104, 17);
+            this.lblActivePrg.TabIndex = 3;
+            this.lblActivePrg.Text = "目前加工程式: 無";
+
+            this.pnlLampGreen.BackColor = System.Drawing.Color.DarkGreen;
+            this.pnlLampGreen.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlLampGreen.Location = new System.Drawing.Point(20, 100);
+            this.pnlLampGreen.Name = "pnlLampGreen";
+            this.pnlLampGreen.Size = new System.Drawing.Size(24, 24);
+            this.pnlLampGreen.TabIndex = 4;
+
+            this.lblLampGreen.AutoSize = true;
+            this.lblLampGreen.Location = new System.Drawing.Point(50, 104);
+            this.lblLampGreen.Name = "lblLampGreen";
+            this.lblLampGreen.Size = new System.Drawing.Size(117, 17);
+            this.lblLampGreen.TabIndex = 5;
+            this.lblLampGreen.Text = "綠燈 (伺服ON/運行)";
+
+            this.pnlLampYellow.BackColor = System.Drawing.Color.DarkGoldenrod;
+            this.pnlLampYellow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlLampYellow.Location = new System.Drawing.Point(200, 100);
+            this.pnlLampYellow.Name = "pnlLampYellow";
+            this.pnlLampYellow.Size = new System.Drawing.Size(24, 24);
+            this.pnlLampYellow.TabIndex = 6;
+
+            this.lblLampYellow.AutoSize = true;
+            this.lblLampYellow.Location = new System.Drawing.Point(230, 104);
+            this.lblLampYellow.Name = "lblLampYellow";
+            this.lblLampYellow.Size = new System.Drawing.Size(126, 17);
+            this.lblLampYellow.TabIndex = 7;
+            this.lblLampYellow.Text = "黃燈 (待機/BeamON)";
+
+            this.pnlLampRed.BackColor = System.Drawing.Color.DarkRed;
+            this.pnlLampRed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlLampRed.Location = new System.Drawing.Point(380, 100);
+            this.pnlLampRed.Name = "pnlLampRed";
+            this.pnlLampRed.Size = new System.Drawing.Size(24, 24);
+            this.pnlLampRed.TabIndex = 8;
+
+            this.lblLampRed.AutoSize = true;
+            this.lblLampRed.Location = new System.Drawing.Point(410, 104);
+            this.lblLampRed.Name = "lblLampRed";
+            this.lblLampRed.Size = new System.Drawing.Size(96, 17);
+            this.lblLampRed.TabIndex = 9;
+            this.lblLampRed.Text = "紅燈 (警報/異常)";
+
+            this.btnModeLocal.Location = new System.Drawing.Point(600, 95);
+            this.btnModeLocal.Name = "btnModeLocal";
+            this.btnModeLocal.Size = new System.Drawing.Size(95, 32);
+            this.btnModeLocal.TabIndex = 10;
+            this.btnModeLocal.Text = "Local 模式";
+            this.btnModeLocal.UseVisualStyleBackColor = true;
+
+            this.btnModeSemiAuto.Location = new System.Drawing.Point(705, 95);
+            this.btnModeSemiAuto.Name = "btnModeSemiAuto";
+            this.btnModeSemiAuto.Size = new System.Drawing.Size(115, 32);
+            this.btnModeSemiAuto.TabIndex = 11;
+            this.btnModeSemiAuto.Text = "Semi-Auto 模式";
+            this.btnModeSemiAuto.UseVisualStyleBackColor = true;
+
+            this.btnModeAuto.Location = new System.Drawing.Point(830, 95);
+            this.btnModeAuto.Name = "btnModeAuto";
+            this.btnModeAuto.Size = new System.Drawing.Size(95, 32);
+            this.btnModeAuto.TabIndex = 12;
+            this.btnModeAuto.Text = "Auto 模式";
+            this.btnModeAuto.UseVisualStyleBackColor = true;
+
+            this.btnStartSchedule.BackColor = System.Drawing.Color.PaleGreen;
+            this.btnStartSchedule.Location = new System.Drawing.Point(940, 95);
+            this.btnStartSchedule.Name = "btnStartSchedule";
+            this.btnStartSchedule.Size = new System.Drawing.Size(125, 32);
+            this.btnStartSchedule.TabIndex = 13;
+            this.btnStartSchedule.Text = "啟動連續運轉";
+            this.btnStartSchedule.UseVisualStyleBackColor = false;
+
+            // --- grpAlarmList ---
+            this.grpAlarmList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpAlarmList.Controls.Add(this.dgvAlarms);
+            this.grpAlarmList.Location = new System.Drawing.Point(15, 205);
+            this.grpAlarmList.Name = "grpAlarmList";
+            this.grpAlarmList.Size = new System.Drawing.Size(1095, 260);
+            this.grpAlarmList.TabIndex = 1;
+            this.grpAlarmList.TabStop = false;
+            this.grpAlarmList.Text = "當前活躍警報清單 (Active Alarms 000~009)";
+
+            this.dgvAlarms.AllowUserToAddRows = false;
+            this.dgvAlarms.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvAlarms.BackgroundColor = System.Drawing.Color.White;
+            this.dgvAlarms.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvAlarms.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvAlarms.Location = new System.Drawing.Point(3, 19);
+            this.dgvAlarms.Name = "dgvAlarms";
+            this.dgvAlarms.ReadOnly = true;
+            this.dgvAlarms.RowTemplate.Height = 25;
+            this.dgvAlarms.Size = new System.Drawing.Size(1089, 238);
+            this.dgvAlarms.TabIndex = 0;
+
+            // ================= tabItTest =================
+            this.tabItTest.Controls.Add(this.grpTestActions);
+            this.tabItTest.Controls.Add(this.grpLog);
+            this.tabItTest.Location = new System.Drawing.Point(4, 26);
+            this.tabItTest.Name = "tabItTest";
+            this.tabItTest.Padding = new System.Windows.Forms.Padding(3);
+            this.tabItTest.Size = new System.Drawing.Size(1132, 470);
+            this.tabItTest.TabIndex = 2;
+            this.tabItTest.Text = "IT 測試";
+            this.tabItTest.UseVisualStyleBackColor = true;
+
+            // --- grpTestActions ---
+            this.grpTestActions.Controls.Add(this.btnTestAlive);
+            this.grpTestActions.Controls.Add(this.btnTestProcessData);
+            this.grpTestActions.Controls.Add(this.btnTestAlarmStart);
+            this.grpTestActions.Controls.Add(this.btnTestAlarmEnd);
+            this.grpTestActions.Controls.Add(this.btnClearLogs);
+            this.grpTestActions.Location = new System.Drawing.Point(15, 15);
+            this.grpTestActions.Name = "grpTestActions";
+            this.grpTestActions.Size = new System.Drawing.Size(1095, 80);
+            this.grpTestActions.TabIndex = 0;
+            this.grpTestActions.TabStop = false;
+            this.grpTestActions.Text = "MQTT 通訊測試與模擬工具";
+
+            this.btnTestAlive.Location = new System.Drawing.Point(15, 28);
+            this.btnTestAlive.Name = "btnTestAlive";
+            this.btnTestAlive.Size = new System.Drawing.Size(190, 35);
+            this.btnTestAlive.TabIndex = 0;
+            this.btnTestAlive.Text = "測試存活檢測 (AreYouThere)";
+            this.btnTestAlive.UseVisualStyleBackColor = true;
+
+            this.btnTestProcessData.Location = new System.Drawing.Point(220, 28);
+            this.btnTestProcessData.Name = "btnTestProcessData";
+            this.btnTestProcessData.Size = new System.Drawing.Size(160, 35);
+            this.btnTestProcessData.TabIndex = 1;
+            this.btnTestProcessData.Text = "模擬製程資料上報";
+            this.btnTestProcessData.UseVisualStyleBackColor = true;
+
+            this.btnTestAlarmStart.Location = new System.Drawing.Point(395, 28);
+            this.btnTestAlarmStart.Name = "btnTestAlarmStart";
+            this.btnTestAlarmStart.Size = new System.Drawing.Size(160, 35);
+            this.btnTestAlarmStart.TabIndex = 2;
+            this.btnTestAlarmStart.Text = "模擬警報發生 (Start)";
+            this.btnTestAlarmStart.UseVisualStyleBackColor = true;
+
+            this.btnTestAlarmEnd.Location = new System.Drawing.Point(570, 28);
+            this.btnTestAlarmEnd.Name = "btnTestAlarmEnd";
+            this.btnTestAlarmEnd.Size = new System.Drawing.Size(160, 35);
+            this.btnTestAlarmEnd.TabIndex = 3;
+            this.btnTestAlarmEnd.Text = "模擬警報解除 (End)";
+            this.btnTestAlarmEnd.UseVisualStyleBackColor = true;
+
+            this.btnClearLogs.Location = new System.Drawing.Point(745, 28);
+            this.btnClearLogs.Name = "btnClearLogs";
+            this.btnClearLogs.Size = new System.Drawing.Size(120, 35);
+            this.btnClearLogs.TabIndex = 4;
+            this.btnClearLogs.Text = "清空通訊日誌";
+            this.btnClearLogs.UseVisualStyleBackColor = true;
+
+            // --- grpLog ---
+            this.grpLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpLog.Controls.Add(this.dgvMqttLogs);
+            this.grpLog.Location = new System.Drawing.Point(15, 105);
+            this.grpLog.Name = "grpLog";
+            this.grpLog.Size = new System.Drawing.Size(1095, 360);
+            this.grpLog.TabIndex = 1;
+            this.grpLog.TabStop = false;
+            this.grpLog.Text = "MQTT 即時封包監聽紀錄";
+
+            this.dgvMqttLogs.AllowUserToAddRows = false;
+            this.dgvMqttLogs.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvMqttLogs.BackgroundColor = System.Drawing.Color.White;
+            this.dgvMqttLogs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvMqttLogs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvMqttLogs.Location = new System.Drawing.Point(3, 19);
+            this.dgvMqttLogs.Name = "dgvMqttLogs";
+            this.dgvMqttLogs.ReadOnly = true;
+            this.dgvMqttLogs.RowTemplate.Height = 25;
+            this.dgvMqttLogs.Size = new System.Drawing.Size(1089, 338);
+            this.dgvMqttLogs.TabIndex = 0;
+
+            // ================= grpResult =================
+            this.grpResult.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpResult.Controls.Add(this.lblResult);
+            this.grpResult.Controls.Add(this.txtResult);
+            this.grpResult.Controls.Add(this.lblResultCode);
+            this.grpResult.Controls.Add(this.txtResultCode);
+            this.grpResult.Controls.Add(this.lblResultMessage);
+            this.grpResult.Controls.Add(this.txtResultMessage);
+            this.grpResult.Location = new System.Drawing.Point(12, 620);
+            this.grpResult.Name = "grpResult";
+            this.grpResult.Size = new System.Drawing.Size(1140, 130);
+            this.grpResult.TabIndex = 9;
+            this.grpResult.TabStop = false;
+            this.grpResult.Text = "執行結果";
+
+            this.lblResult.AutoSize = true;
+            this.lblResult.Location = new System.Drawing.Point(15, 25);
+            this.lblResult.Name = "lblResult";
+            this.lblResult.Size = new System.Drawing.Size(51, 17);
+            this.lblResult.TabIndex = 0;
+            this.lblResult.Text = "Result :";
+
+            this.txtResult.Font = new System.Drawing.Font("微軟正黑體", 9.5F, System.Drawing.FontStyle.Bold);
+            this.txtResult.Location = new System.Drawing.Point(75, 22);
+            this.txtResult.Name = "txtResult";
+            this.txtResult.ReadOnly = true;
+            this.txtResult.Size = new System.Drawing.Size(120, 24);
+            this.txtResult.TabIndex = 1;
+
+            this.lblResultCode.AutoSize = true;
+            this.lblResultCode.Location = new System.Drawing.Point(15, 58);
+            this.lblResultCode.Name = "lblResultCode";
+            this.lblResultCode.Size = new System.Drawing.Size(78, 17);
+            this.lblResultCode.TabIndex = 2;
+            this.lblResultCode.Text = "ResultCode :";
+
+            this.txtResultCode.Location = new System.Drawing.Point(95, 55);
+            this.txtResultCode.Name = "txtResultCode";
+            this.txtResultCode.ReadOnly = true;
+            this.txtResultCode.Size = new System.Drawing.Size(100, 23);
+            this.txtResultCode.TabIndex = 3;
+
+            this.lblResultMessage.AutoSize = true;
+            this.lblResultMessage.Location = new System.Drawing.Point(220, 25);
+            this.lblResultMessage.Name = "lblResultMessage";
+            this.lblResultMessage.Size = new System.Drawing.Size(99, 17);
+            this.lblResultMessage.TabIndex = 4;
+            this.lblResultMessage.Text = "ResultMessage :";
+
+            this.txtResultMessage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtResultMessage.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.txtResultMessage.Location = new System.Drawing.Point(325, 22);
+            this.txtResultMessage.Multiline = true;
+            this.txtResultMessage.Name = "txtResultMessage";
+            this.txtResultMessage.ReadOnly = true;
+            this.txtResultMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtResultMessage.Size = new System.Drawing.Size(800, 95);
+            this.txtResultMessage.TabIndex = 5;
+
+            // ================= 根表單配置 =================
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1164, 761);
+            this.Controls.Add(this.grpCurrentOperator);
+            this.Controls.Add(this.grpAuth);
+            this.Controls.Add(this.btnSettings);
+            this.Controls.Add(this.btnConnectMes);
+            this.Controls.Add(this.btnToggleLang);
+            this.Controls.Add(this.btnDisconnectMes);
+            this.Controls.Add(this.pnlMqttLed);
+            this.Controls.Add(this.lblMqttLed);
+            this.Controls.Add(this.tabMain);
+            this.Controls.Add(this.grpResult);
+            this.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Regular);
+            this.MinimumSize = new System.Drawing.Size(1100, 750);
+            this.Name = "MainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "MES - 2026/09/16";
+
+            // EndInit DataGridViews
+            ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvManageParams)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).EndInit();
+
+            this.grpCurrentOperator.ResumeLayout(false);
+            this.grpCurrentOperator.PerformLayout();
+            this.grpAuth.ResumeLayout(false);
+            this.grpAuth.PerformLayout();
+            this.tabMain.ResumeLayout(false);
+            this.tabWorkOrder.ResumeLayout(false);
+            this.tabEquipment.ResumeLayout(false);
+            this.tabItTest.ResumeLayout(false);
+            this.grpOrderInfo.ResumeLayout(false);
+            this.grpOrderInfo.PerformLayout();
+            this.grpNgInput.ResumeLayout(false);
+            this.grpNgInput.PerformLayout();
+            this.grpTrackedInList.ResumeLayout(false);
+            this.grpManageParams.ResumeLayout(false);
+            this.grpOrderActions.ResumeLayout(false);
+            this.grpOpcStatus.ResumeLayout(false);
+            this.grpOpcStatus.PerformLayout();
+            this.grpAlarmList.ResumeLayout(false);
+            this.grpTestActions.ResumeLayout(false);
+            this.grpLog.ResumeLayout(false);
+            this.grpResult.ResumeLayout(false);
+            this.grpResult.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
         }
+
+        #endregion
+
+        // 宣告成員欄位
+        private System.Windows.Forms.GroupBox grpCurrentOperator;
+        private System.Windows.Forms.Label lblOpId;
+        private System.Windows.Forms.TextBox txtCurrentOpId;
+        private System.Windows.Forms.Label lblOpName;
+        private System.Windows.Forms.TextBox txtCurrentOpName;
+
+        private System.Windows.Forms.GroupBox grpAuth;
+        private System.Windows.Forms.Label lblBarcode;
+        private System.Windows.Forms.TextBox txtBarcode;
+        private System.Windows.Forms.Button btnUserAuth;
+        private System.Windows.Forms.Label lblUserId;
+        private System.Windows.Forms.TextBox txtLoginUserId;
+        private System.Windows.Forms.Label lblPassword;
+        private System.Windows.Forms.TextBox txtLoginPassword;
+        private System.Windows.Forms.Button btnClearAuth;
+
+        private System.Windows.Forms.Button btnSettings;
+        private System.Windows.Forms.Button btnConnectMes;
+        private System.Windows.Forms.Button btnToggleLang;
+        private System.Windows.Forms.Button btnDisconnectMes;
+        private System.Windows.Forms.Panel pnlMqttLed;
+        private System.Windows.Forms.Label lblMqttLed;
+
+        private System.Windows.Forms.TabControl tabMain;
+        private System.Windows.Forms.TabPage tabWorkOrder;
+        private System.Windows.Forms.TabPage tabEquipment;
+        private System.Windows.Forms.TabPage tabItTest;
+
+        private System.Windows.Forms.GroupBox grpOrderInfo;
+        private System.Windows.Forms.Label lblWo;
+        private System.Windows.Forms.TextBox txtWorkOrder;
+        private System.Windows.Forms.Label lblBatchNo;
+        private System.Windows.Forms.TextBox txtBatchNo;
+        private System.Windows.Forms.Label lblPartNo;
+        private System.Windows.Forms.TextBox txtPartNo;
+        private System.Windows.Forms.Label lblProcessNo;
+        private System.Windows.Forms.TextBox txtProcessNo;
+        private System.Windows.Forms.Label lblProcessName;
+        private System.Windows.Forms.TextBox txtProcessName;
+        private System.Windows.Forms.Label lblTotalQty;
+        private System.Windows.Forms.TextBox txtTotalQty;
+        private System.Windows.Forms.Label lblRunQty;
+        private System.Windows.Forms.TextBox txtRunQty;
+        private System.Windows.Forms.Label lblCompletedQty;
+        private System.Windows.Forms.TextBox txtCompletedQty;
+        private System.Windows.Forms.Label lblRecipeId;
+        private System.Windows.Forms.TextBox txtRecipeId;
+        private System.Windows.Forms.Label lblIsTrackedIn;
+        private System.Windows.Forms.TextBox txtIsTrackedIn;
+        private System.Windows.Forms.Label lblComponentNo;
+        private System.Windows.Forms.TextBox txtComponentNo;
+
+        private System.Windows.Forms.GroupBox grpNgInput;
+        private System.Windows.Forms.CheckBox chkNoNg;
+        private System.Windows.Forms.Button btnAddNg;
+        private System.Windows.Forms.Button btnRemoveNg;
+        private System.Windows.Forms.DataGridView dgvNgList;
+
+        private System.Windows.Forms.GroupBox grpTrackedInList;
+        private System.Windows.Forms.DataGridView dgvTrackedIn;
+
+        private System.Windows.Forms.GroupBox grpManageParams;
+        private System.Windows.Forms.DataGridView dgvManageParams;
+
+        private System.Windows.Forms.GroupBox grpOrderActions;
+        private System.Windows.Forms.Button btnQueryOrder;
+        private System.Windows.Forms.Button btnTrackIn;
+        private System.Windows.Forms.Button btnTrackOut;
+        private System.Windows.Forms.Button btnChangeUser;
+        private System.Windows.Forms.Button btnClearOrder;
+
+        private System.Windows.Forms.GroupBox grpOpcStatus;
+        private System.Windows.Forms.Label lblOpcConn;
+        private System.Windows.Forms.Label lblMachineState;
+        private System.Windows.Forms.Label lblProgress;
+        private System.Windows.Forms.Label lblActivePrg;
+        private System.Windows.Forms.Panel pnlLampGreen;
+        private System.Windows.Forms.Label lblLampGreen;
+        private System.Windows.Forms.Panel pnlLampYellow;
+        private System.Windows.Forms.Label lblLampYellow;
+        private System.Windows.Forms.Panel pnlLampRed;
+        private System.Windows.Forms.Label lblLampRed;
+        private System.Windows.Forms.Button btnModeLocal;
+        private System.Windows.Forms.Button btnModeSemiAuto;
+        private System.Windows.Forms.Button btnModeAuto;
+        private System.Windows.Forms.Button btnStartSchedule;
+
+        private System.Windows.Forms.GroupBox grpAlarmList;
+        private System.Windows.Forms.DataGridView dgvAlarms;
+
+        private System.Windows.Forms.GroupBox grpTestActions;
+        private System.Windows.Forms.Button btnTestAlive;
+        private System.Windows.Forms.Button btnTestProcessData;
+        private System.Windows.Forms.Button btnTestAlarmStart;
+        private System.Windows.Forms.Button btnTestAlarmEnd;
+        private System.Windows.Forms.Button btnClearLogs;
+        private System.Windows.Forms.GroupBox grpLog;
+        private System.Windows.Forms.DataGridView dgvMqttLogs;
+
+        private System.Windows.Forms.GroupBox grpResult;
+        private System.Windows.Forms.Label lblResult;
+        private System.Windows.Forms.TextBox txtResult;
+        private System.Windows.Forms.Label lblResultCode;
+        private System.Windows.Forms.TextBox txtResultCode;
+        private System.Windows.Forms.Label lblResultMessage;
+        private System.Windows.Forms.TextBox txtResultMessage;
     }
 }
