@@ -134,6 +134,29 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpLog = new System.Windows.Forms.GroupBox();
             this.dgvMqttLogs = new System.Windows.Forms.DataGridView();
 
+            // 實例化 DataGridView 欄位
+            this.colNgCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgChineseName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNgQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
+
+            this.colWoNo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colOther1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+
+            this.colParamName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colParamValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMustInput = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colInputType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+
+            this.colAlarmCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAlarmMsg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAlarmType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAlarmTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+
+            this.colLogTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colLogDir = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colLogTopic = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colLogPayload = new System.Windows.Forms.DataGridViewTextBoxColumn();
+
             // 實例化底部控制項
             this.grpResult = new System.Windows.Forms.GroupBox();
             this.lblResult = new System.Windows.Forms.Label();
@@ -552,11 +575,22 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvNgList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvNgList.BackgroundColor = System.Drawing.Color.White;
             this.dgvNgList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvNgList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colNgCode,
+                this.colNgChineseName,
+                this.colNgQty});
             this.dgvNgList.Location = new System.Drawing.Point(15, 48);
             this.dgvNgList.Name = "dgvNgList";
             this.dgvNgList.RowTemplate.Height = 25;
             this.dgvNgList.Size = new System.Drawing.Size(355, 170);
             this.dgvNgList.TabIndex = 3;
+
+            this.colNgCode.HeaderText = "NGCode";
+            this.colNgCode.Name = "NGCode";
+            this.colNgChineseName.HeaderText = "NG Chinese Name";
+            this.colNgChineseName.Name = "NGChineseName";
+            this.colNgQty.HeaderText = "Qty";
+            this.colNgQty.Name = "Qty";
 
             // --- grpTrackedInList ---
             this.grpTrackedInList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -573,6 +607,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvTrackedIn.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvTrackedIn.BackgroundColor = System.Drawing.Color.White;
             this.dgvTrackedIn.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTrackedIn.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colWoNo,
+                this.colOther1});
             this.dgvTrackedIn.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvTrackedIn.Location = new System.Drawing.Point(3, 19);
             this.dgvTrackedIn.Name = "dgvTrackedIn";
@@ -580,6 +617,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvTrackedIn.RowTemplate.Height = 25;
             this.dgvTrackedIn.Size = new System.Drawing.Size(254, 198);
             this.dgvTrackedIn.TabIndex = 0;
+
+            this.colWoNo.HeaderText = "工單號碼(WoNo)";
+            this.colWoNo.Name = "WoNo";
+            this.colOther1.HeaderText = "其他1";
+            this.colOther1.Name = "Other1";
 
             // --- grpManageParams ---
             this.grpManageParams.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -597,12 +639,26 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvManageParams.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvManageParams.BackgroundColor = System.Drawing.Color.White;
             this.dgvManageParams.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvManageParams.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colParamName,
+                this.colParamValue,
+                this.colMustInput,
+                this.colInputType});
             this.dgvManageParams.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvManageParams.Location = new System.Drawing.Point(3, 19);
             this.dgvManageParams.Name = "dgvManageParams";
             this.dgvManageParams.RowTemplate.Height = 25;
             this.dgvManageParams.Size = new System.Drawing.Size(654, 198);
             this.dgvManageParams.TabIndex = 0;
+
+            this.colParamName.HeaderText = "管理項目名稱(Manage item name)";
+            this.colParamName.Name = "Name";
+            this.colParamValue.HeaderText = "管理項目值(Manage item values)";
+            this.colParamValue.Name = "Value";
+            this.colMustInput.HeaderText = "需輸入?(Must Input?)";
+            this.colMustInput.Name = "MustInput";
+            this.colInputType.HeaderText = "輸入類型(Input type)";
+            this.colInputType.Name = "InputType";
 
             // --- grpOrderActions ---
             this.grpOrderActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -810,6 +866,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvAlarms.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvAlarms.BackgroundColor = System.Drawing.Color.White;
             this.dgvAlarms.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvAlarms.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colAlarmCode,
+                this.colAlarmMsg,
+                this.colAlarmType,
+                this.colAlarmTime});
             this.dgvAlarms.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvAlarms.Location = new System.Drawing.Point(3, 19);
             this.dgvAlarms.Name = "dgvAlarms";
@@ -817,6 +878,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvAlarms.RowTemplate.Height = 25;
             this.dgvAlarms.Size = new System.Drawing.Size(1089, 238);
             this.dgvAlarms.TabIndex = 0;
+
+            this.colAlarmCode.HeaderText = "警報代碼";
+            this.colAlarmCode.Name = "AlarmCode";
+            this.colAlarmMsg.HeaderText = "警報訊息內容";
+            this.colAlarmMsg.Name = "AlarmMsg";
+            this.colAlarmType.HeaderText = "等級";
+            this.colAlarmType.Name = "AlarmType";
+            this.colAlarmTime.HeaderText = "偵測時間";
+            this.colAlarmTime.Name = "Time";
 
             // ================= tabItTest =================
             this.tabItTest.Controls.Add(this.grpTestActions);
@@ -893,6 +963,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvMqttLogs.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvMqttLogs.BackgroundColor = System.Drawing.Color.White;
             this.dgvMqttLogs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvMqttLogs.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colLogTime,
+                this.colLogDir,
+                this.colLogTopic,
+                this.colLogPayload});
             this.dgvMqttLogs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvMqttLogs.Location = new System.Drawing.Point(3, 19);
             this.dgvMqttLogs.Name = "dgvMqttLogs";
@@ -900,6 +975,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvMqttLogs.RowTemplate.Height = 25;
             this.dgvMqttLogs.Size = new System.Drawing.Size(1089, 338);
             this.dgvMqttLogs.TabIndex = 0;
+
+            this.colLogTime.HeaderText = "時間";
+            this.colLogTime.Name = "Time";
+            this.colLogDir.HeaderText = "方向";
+            this.colLogDir.Name = "Direction";
+            this.colLogTopic.HeaderText = "主題 (Topic)";
+            this.colLogTopic.Name = "Topic";
+            this.colLogPayload.HeaderText = "訊息內文 (JSON Payload)";
+            this.colLogPayload.Name = "Payload";
 
             // ================= grpResult =================
             this.grpResult.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
@@ -1125,5 +1209,27 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.TextBox txtResultCode;
         private System.Windows.Forms.Label lblResultMessage;
         private System.Windows.Forms.TextBox txtResultMessage;
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgCode;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgChineseName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNgQty;
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn colWoNo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colOther1;
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn colParamName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colParamValue;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMustInput;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colInputType;
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmCode;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmMsg;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmTime;
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn colLogTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colLogDir;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colLogTopic;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colLogPayload;
     }
 }
