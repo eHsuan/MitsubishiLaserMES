@@ -40,6 +40,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             BindCoordinatorEvents();
             BindFormEvents();
             InitSampleData();
+            UpdateEapLed();
         }
 
         private void BindCoordinatorEvents()
@@ -488,7 +489,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             }
             else
             {
-                pnlMqttLed.BackColor = Color.Red;
+                pnlMqttLed.BackColor = Color.Gold;
             }
         }
 

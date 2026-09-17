@@ -47,14 +47,21 @@ namespace MitsubishiLaserMES.WinForms.Forms
             using var form = new MaskWaitForm(message);
             Task<T> actionTask = action();
 
-            // 當 Task 完成時自動關閉 Form
-            _ = actionTask.ContinueWith(t =>
+            form.Shown += async (s, e) =>
             {
-                if (form.IsHandleCreated && !form.IsDisposed)
+                try
                 {
-                    form.BeginInvoke(new Action(() => form.Close()));
+                    await actionTask;
                 }
-            });
+                catch { }
+                finally
+                {
+                    if (!form.IsDisposed)
+                    {
+                        form.Close();
+                    }
+                }
+            };
 
             form.ShowDialog(parent);
             return await actionTask;

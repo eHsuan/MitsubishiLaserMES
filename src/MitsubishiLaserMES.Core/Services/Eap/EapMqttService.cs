@@ -47,6 +47,12 @@ namespace MitsubishiLaserMES.Core.Services.Eap
 
         public async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
         {
+            if (IsConnected)
+            {
+                LogMessage?.Invoke("[MQTT] 目前已處於連線狀態，無需重複連線。");
+                return true;
+            }
+
             try
             {
                 LogMessage?.Invoke($"[MQTT] 正在連線至 Broker {_settings.Server}:{_settings.Port}...");
@@ -266,6 +272,9 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                 // 3. BC 發起的 AreYouThere -> EQ 回覆 IamHere
                 if (string.Equals(cmd, "AreYouThere", StringComparison.OrdinalIgnoreCase))
                 {
+                    IsAliveGreen = true;
+                    AliveStatusChanged?.Invoke(true);
+
                     var reply = new AliveCheckReplyPayload
                     {
                         TransactionID = transactionId,
@@ -374,22 +383,23 @@ namespace MitsubishiLaserMES.Core.Services.Eap
 
         private async Task AliveCheckLoopAsync(CancellationToken token)
         {
+            // 連線建立後先立即進行一次雙向心跳探測
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(500, token).ConfigureAwait(false);
+                    await SendAlivePingAsync(token).ConfigureAwait(false);
+                }
+                catch { }
+            }, token);
+
             while (!token.IsCancellationRequested)
             {
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(_settings.AliveCheckIntervalSec), token).ConfigureAwait(false);
-                    if (IsConnected)
-                    {
-                        var ping = new AliveCheckReqPayload
-                        {
-                            Machine = _settings.EqID
-                        };
-                        var reply = await SendRequestAsync<AliveCheckReqPayload, AliveCheckReplyPayload>(ping, token).ConfigureAwait(false);
-                        bool ok = reply != null && reply.IsPass;
-                        IsAliveGreen = ok;
-                        AliveStatusChanged?.Invoke(ok);
-                    }
+                    await SendAlivePingAsync(token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -400,6 +410,28 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                     IsAliveGreen = false;
                     AliveStatusChanged?.Invoke(false);
                 }
+            }
+        }
+
+        private async Task SendAlivePingAsync(CancellationToken token)
+        {
+            if (!IsConnected) return;
+
+            try
+            {
+                var ping = new AliveCheckReqPayload
+                {
+                    Machine = _settings.EqID
+                };
+                var reply = await SendRequestAsync<AliveCheckReqPayload, AliveCheckReplyPayload>(ping, token).ConfigureAwait(false);
+                bool ok = reply != null && reply.IsPass;
+                IsAliveGreen = ok;
+                AliveStatusChanged?.Invoke(ok);
+            }
+            catch
+            {
+                IsAliveGreen = false;
+                AliveStatusChanged?.Invoke(false);
             }
         }
 

@@ -48,6 +48,12 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
         public async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
         {
+            if (IsConnected)
+            {
+                LogMessage?.Invoke("[OPC] 目前已處於連線狀態，無需重複連線。");
+                return true;
+            }
+
             try
             {
                 LogMessage?.Invoke($"[OPC] 正在建立連線... (模式: {(IsVirtual ? "虛擬模擬器" : "實機 OPC-UA")})");
