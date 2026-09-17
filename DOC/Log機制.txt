@@ -1,0 +1,107 @@
+  ### 一、使用套件與技術依賴 (Dependencies)
+
+  • 零第三方日誌套件依賴 (Zero 3rd-party Logging Frameworks)：
+      • 不依賴 Serilog、NLog 或 log4net，避免引入龐大的組件依賴、複雜的 XML/YAML 設定檔與潛在的版本衝突。
+  • 使用的 .NET 原生類別庫：
+      • System.IO：File.AppendAllText、FileInfo、Directory.GetDirectories 等基本 I/O。
+      • System.IO.Compression 與 System.IO.Compression.ZipFile（.NET 內建）：負責將歷史日誌資料夾自動壓縮封存為 .zip。
+      • System.Threading.Timer：負責背景定時排程維運任務。
+      • System.Text.RegularExpressions：用於歷史日誌多行字串與時間戳記的快速比對與解析。
+      • Newtonsoft.Json：用於讀取與反序列化 config.json 中的 LogSettings。
+
+  ──────
+  ### 二、日誌目錄與檔案組織結構 (Directory & File Layout)
+
+  日誌採用**「按日分層 ➔ 按設備隔離 ➔ 按小時切檔 ➔ 支援單檔大小滾動（Rolling）」**的樹狀階層設計：
+
+    EAPDashboard/ (應用程式根目錄)
+      └── logs/
+          ├── 20260914.zip                   # 超過 3 天的歷史日誌，自動壓縮封存
+          ├── 20260915.zip
+          ├── 20260916/                      # 3 天內的日誌保留原始文字資料夾
+          │   ├── TP0013/                    # 設備 A 專屬目錄
+          │   │   ├── 08.txt                 # 08:00~08:59 產生的日誌
+          │   │   ├── 08_1.txt               # 若單檔超過 MaxFileSizeMB 自動滾動生成
+          │   │   └── 09.txt
+          │   └── ET0026/                    # 設備 B 專屬目錄
+          │       └── 08.txt
+          └── 20260917/                      # 當天日誌
+              ├── TP0013/
+              │   └── 10.txt
+              └── System/                    # 非設備層級的系統日誌
+                  └── 10.txt
+
+  1. 根目錄：AppDomain.CurrentDomain.BaseDirectory/logs
+  2. 日期目錄：logs/{yyyyMMdd}/（例如 logs/20260917/）
+  3. 機台/模組目錄：logs/{yyyyMMdd}/{EquipmentId}/（若無機台則為 System）
+  4. 小時檔案：{HH}.txt（例如 08.txt、09.txt）
+  5. 容量滾動分卷 (Rolling File)：
+      • 當該小時的主檔（如 08.txt）長度超過設定上限（預設 20 MB）時，自動依序生成 08_1.txt、08_2.txt ...，避免單一檔案過大導致記事本或分析工具無法開啟。
+
+  ──────
+  ### 三、日誌格式與寫入機制 (Log Format & Thread-Safety)
+
+  #### 1. 標準日誌格式
+
+    [{yyyy-MM-dd HH:mm:ss.fff}] [{LogLevel}] [{EventName}] : {Message}
+
+  • 範例：
+    [2026-09-17 10:15:30.123] [Info] [TrackIn] : Processing TrackIn for WO: WO202609001
+    [2026-09-17 10:15:32.456] [Error] : MES Reply Timeout (25s) for Equipment: TP0013
+
+
+  #### 2. 執行緒安全與事件解耦
+
+  在 EquipmentBase.cs 中實作：
+
+    protected virtual void OnLogReceived(LogLevel level, string eventName, string message)
+    {
+        var timestamp = DateTime.Now;
+
+        // 1. 同步觸發 C# Event，供 UI (如 LogForm) 進行即時畫面推播
+        LogReceived?.Invoke(timestamp, level, message);
+
+        // 2. 磁碟寫入 (利用物件鎖確保多執行緒寫入檔案時不衝突)
+        try {
+            lock (_logLock) {
+                string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", timestamp.ToString("yyyyMMdd"), this.Id ?? "System");
+                if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+
+                int maxMB = LogMaintenanceService.CurrentSettings?.MaxFileSizeMB ?? 20;
+                string filePath = LogMaintenanceService.GetLogFilePath(logDir, timestamp, maxMB);
+                string evtPart = string.IsNullOrEmpty(eventName) ? "" : string.Format(" [{0}]", eventName);
+
+                File.AppendAllText(filePath, string.Format("[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}]{2} : {3}{4}",
+                    timestamp, level, evtPart, message, Environment.NewLine));
+            }
+        } catch { }
+    }
+  ──────
+  ### 四、生命週期維運與自動清理機制 (LogMaintenanceService.cs)
+
+  系統採用獨立靜態服務 LogMaintenanceService.cs，於主程式啟動時啟動背景定時排程：
+
+  #### 1. 設定參數結構 (config.json)
+
+    "LogSettings": {
+      "Enabled": true,        // 是否啟用維運
+      "CompressDays": 3,      // 超過此天數的歷史日誌資料夾自動壓縮為 .zip
+      "RetentionDays": 30,    // 超過此天數的 .zip 或資料夾自動刪除
+      "MaxFileSizeMB": 20     // 單一小時文字檔上限 (MB)
+    }
+
+  #### 2. 背景排程維運邏輯
+
+  • 排程時機：
+      • 程式啟動時立即在背景非同步執行一次。
+      • 使用 System.Threading.Timer 每 6 小時 自動於背景執行一次。
+  • 階段一：歷史資料夾 ZIP 壓縮封存 (Compression)：
+      • 掃描 logs/ 底下符合 yyyyMMdd 格式的目錄。
+      • 若資料夾日期距今已超過 CompressDays（如 3 天前），呼叫 ZipFile.CreateFromDirectory(dir, zipPath, CompressionLevel.Optimal, false)。
+      • 檢查 .zip 檔案建立成功且檔案大小大於 0 後，刪除原始目錄。大幅降低磁碟空間佔用，並減少檔案系統 Inode / 碎片負擔。
+  • 階段二：過期檔案淘汰刪除 (Retention)：
+      • 掃描 logs/ 底下的所有 .zip 檔案與殘留資料夾。
+      • 若日期超過 RetentionDays（如 30 天前），呼叫 File.Delete() 自動刪除，維持硬碟可用空間。
+  • 防禦性設計：
+      • 使用 _syncLock 旗標避免背景排程重入衝突。
+      • 遇到其他行程正鎖定讀寫的檔案時，自動略過（Catch 攔截），交由下次排程處理，絕不影響主程式運作。

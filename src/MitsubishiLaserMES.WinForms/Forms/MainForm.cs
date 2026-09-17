@@ -535,8 +535,14 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private void AppendLog(string message)
         {
+            if (txtResultMessage.TextLength > 30000)
+            {
+                txtResultMessage.Text = txtResultMessage.Text.Substring(15000);
+            }
             string line = $"[{DateTime.Now:HH:mm:ss}] {message}\r\n";
             txtResultMessage.AppendText(line);
+            txtResultMessage.SelectionStart = txtResultMessage.TextLength;
+            txtResultMessage.ScrollToCaret();
         }
 
         private void ToggleLanguage()

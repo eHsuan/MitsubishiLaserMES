@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using MitsubishiLaserMES.Core.Common;
 using MitsubishiLaserMES.Core.Models.Config;
 using MitsubishiLaserMES.Core.Models.Eap;
+using MitsubishiLaserMES.Core.Logging;
 
 namespace MitsubishiLaserMES.Core.Services.Eap
 {
@@ -229,6 +230,7 @@ namespace MitsubishiLaserMES.Core.Services.Eap
 
             await _mqttClient.PublishAsync(msg, cancellationToken).ConfigureAwait(false);
             MessageSentLog?.Invoke(topic, json);
+            LogService.Instance.Debug("MQTT-TX", $"[Topic: {topic}] {json}", _settings.EqID);
         }
 
         private Task HandleIncomingMessageAsync(MqttApplicationMessageReceivedEventArgs e)
@@ -236,6 +238,7 @@ namespace MitsubishiLaserMES.Core.Services.Eap
             string topic = e.ApplicationMessage.Topic;
             string payloadStr = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
             MessageReceivedLog?.Invoke(topic, payloadStr);
+            LogService.Instance.Debug("MQTT-RX", $"[Topic: {topic}] {payloadStr}", _settings.EqID);
 
             try
             {

@@ -1,4 +1,5 @@
 using System;
+using MitsubishiLaserMES.Core.Logging;
 
 namespace MitsubishiLaserMES.Core.Models.Config
 {
@@ -40,6 +41,8 @@ namespace MitsubishiLaserMES.Core.Models.Config
     {
         public MqttSettings Mqtt { get; set; } = new MqttSettings();
         public OpcSettings Opc { get; set; } = new OpcSettings();
+        public LogSettings LogSettings { get; set; } = new LogSettings();
         public string Language { get; set; } = "zh-TW"; // zh-TW 或 en-US
     }
 }
+
