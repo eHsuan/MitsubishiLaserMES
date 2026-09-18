@@ -184,6 +184,16 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
                 _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}");
                 SystemLogMessage?.Invoke($"[工單進站成功] 工單={primaryWo}, 卡匣={primaryCst}");
+
+                // 進站成功後通知機台啟動連續加工運轉
+                if (OpcService.IsConnected)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(300).ConfigureAwait(false);
+                        await OpcService.StartScheduleAsync().ConfigureAwait(false);
+                    });
+                }
             }
             else
             {
@@ -256,6 +266,15 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 TrackOutCompleted?.Invoke(primaryWo);
                 _logger.Info("TrackOut", $"工單出站成功: 工單 {primaryWo} 帳務過帳完成。");
                 SystemLogMessage?.Invoke($"[工單出站成功] 工單 {primaryWo} 帳務過帳完成。");
+
+                // 出站成功後通知機台停止連續加工運轉
+                if (OpcService.IsConnected)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        await OpcService.StopScheduleAsync().ConfigureAwait(false);
+                    });
+                }
             }
             else
             {
@@ -402,8 +421,9 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         }
                         else
                         {
-                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 Recipe: {cmd.RecipeID} 至雷射機...");
-                            bool success = await OpcService.DeliverRecipeAsync(cmd.RecipeID, -1).ConfigureAwait(false);
+                            short sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 Recipe: {cmd.RecipeID} (片數: {sheetCount}) 至雷射機...");
+                            bool success = await OpcService.DeliverRecipeAsync(cmd.RecipeID, sheetCount).ConfigureAwait(false);
                             if (success)
                             {
                                 reply.RtnResult = RtnResult.PASS;

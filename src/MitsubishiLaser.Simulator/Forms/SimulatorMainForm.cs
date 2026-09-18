@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using MitsubishiLaserMES.Core.Simulator;
+using MitsubishiLaserMES.Core.Opc.Server;
 using MitsubishiLaserOpc.Enums;
 
 namespace MitsubishiLaser.Simulator.Forms
@@ -10,6 +11,7 @@ namespace MitsubishiLaser.Simulator.Forms
     public partial class SimulatorMainForm : Form
     {
         private readonly ILaserMachineSimulator _simulator;
+        private LaserOpcServerHost _opcServerHost;
 
         public SimulatorMainForm() : this(LaserMachineSimulatorEngine.SharedInstance)
         {
@@ -22,6 +24,7 @@ namespace MitsubishiLaser.Simulator.Forms
 
             InitCustomUI();
             BindEvents();
+            StartOpcServer();
         }
 
         private void InitCustomUI()
@@ -126,7 +129,23 @@ namespace MitsubishiLaser.Simulator.Forms
             {
                 _simulator.StateChanged -= OnSimulatorStateChanged;
                 _simulator.LogEmitted -= OnSimulatorLogEmitted;
+                _opcServerHost?.Stop();
             };
+        }
+
+        private async void StartOpcServer()
+        {
+            try
+            {
+                _opcServerHost = new LaserOpcServerHost();
+                await _opcServerHost.StartAsync(_simulator, 4840).ConfigureAwait(true);
+                this.Text = "三菱 CO2 雷射加工機 完整功能測試模擬器 [OPC UA Server 運行中: opc.tcp://127.0.0.1:4840]";
+                OnSimulatorLogEmitted("[OPC Server] OPC UA 伺服器已成功啟動於 opc.tcp://0.0.0.0:4840 (提供 MES 標準 OPC 連線)");
+            }
+            catch (Exception ex)
+            {
+                OnSimulatorLogEmitted($"[OPC Server 啟動失敗] {ex.Message}");
+            }
         }
 
         private void OnSimulatorStateChanged()

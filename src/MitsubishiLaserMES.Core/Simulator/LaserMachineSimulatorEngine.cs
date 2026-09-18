@@ -449,7 +449,7 @@ namespace MitsubishiLaserMES.Core.Simulator
 
                         if (ack == 1)
                         {
-                            ActiveLotId = RemoteLotId;
+                            ActiveLotId = !string.IsNullOrEmpty(RemoteLotId) ? RemoteLotId : "LOT-" + DateTime.Now.ToString("MMdd-HHmm");
                             ActiveProgramFile = RequestedProgramFile;
                             ActiveConditionFile = RequestedConditionFile;
                             ScheduledCount = RequestedSheetNum > 0 ? RequestedSheetNum : (short)5;
@@ -458,7 +458,7 @@ namespace MitsubishiLaserMES.Core.Simulator
                             GetRecipeRequest = false; // 機台復歸 Req
 
                             SetMachineStatus(MachineStatus.Ready);
-                            Log($"[配方交握完成] 機台成功載入配方: {ActiveProgramFile}，總片數: {ScheduledCount}，狀態變更為 Ready。");
+                            Log($"[配方交握完成] 機台成功載入配方: {ActiveProgramFile}，批號: {ActiveLotId}，總片數: {ScheduledCount}，狀態變更為 Ready。");
                         }
                         else if (ack == -1)
                         {
