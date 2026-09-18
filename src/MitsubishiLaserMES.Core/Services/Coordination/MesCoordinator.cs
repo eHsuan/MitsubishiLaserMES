@@ -88,14 +88,18 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 return new UserVerifyReplyPayload { RtnResult = "FAIL", RtnMsg = "請輸入或掃描人員二維條碼" };
             }
 
-            _logger.Info("UserVerify", $"正在向 EAP 驗證工號/條碼: {userBarcode}");
-            SystemLogMessage?.Invoke($"[人員驗證] 正在向 EAP 驗證工號/條碼: {userBarcode}");
-            var req = new UserVerifyReqPayload
+            string eventId = _config.Profile?.GetEventId("USER_VERIFY", "104") ?? "104";
+            string eventName = _config.Profile?.GetEventName(eventId, "USER_VERIFY") ?? "USER_VERIFY";
+            string barcodeParam = _config.Profile?.GetVariableId("User_Barcode", "1028") ?? "1028";
+
+            _logger.Info("UserVerify", $"正在向 EAP 驗證工號/條碼: {userBarcode} (EventID: {eventId}, Param: {barcodeParam})");
+            SystemLogMessage?.Invoke($"[人員驗證] 正在向 EAP 驗證工號/條碼: {userBarcode} (EventID: {eventId})");
+            var req = new UserVerifyReqPayload(eventId, eventName)
             {
                 Machine = _config.Mqtt.EqID,
                 Data = new List<EventReportItem>
                 {
-                    new EventReportItem { Parameter = "1023", Value = userBarcode }
+                    new EventReportItem { Parameter = barcodeParam, Value = userBarcode }
                 }
             };
 
@@ -235,6 +239,11 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         private void OnOpcAlarmTriggered(string code, string msg, bool isStart)
         {
+            if (string.IsNullOrWhiteSpace(msg))
+            {
+                msg = _config.Profile?.GetAlarmMessage(code, "未定義警報");
+            }
+
             string stateStr = isStart ? "Start(發生)" : "End(解除)";
             if (isStart)
             {

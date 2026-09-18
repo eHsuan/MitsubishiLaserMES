@@ -17,18 +17,18 @@ namespace MitsubishiLaserMES.Core.Models.Eap
     /// </summary>
     public class UserVerifyReqPayload : EapPayloadBase
     {
-        public UserVerifyReqPayload()
+        public UserVerifyReqPayload(string eventId = "104", string eventName = "USER_VERIFY")
         {
             CMD = "EventReport";
-            EventID = "5000";
-            EventName = "UserIDVerify";
+            EventID = string.IsNullOrWhiteSpace(eventId) ? "104" : eventId;
+            EventName = string.IsNullOrWhiteSpace(eventName) ? "USER_VERIFY" : eventName;
         }
 
         [JsonProperty("EventID")]
-        public string EventID { get; set; } = "5000";
+        public string EventID { get; set; } = "104";
 
         [JsonProperty("EventName")]
-        public string EventName { get; set; } = "UserIDVerify";
+        public string EventName { get; set; } = "USER_VERIFY";
 
         [JsonProperty("Data")]
         public List<EventReportItem> Data { get; set; } = new List<EventReportItem>();

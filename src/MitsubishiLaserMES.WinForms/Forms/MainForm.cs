@@ -470,11 +470,22 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtCompletedQty.Text = "0";
             txtRecipeId.Text = "RECIPE_MITSUBISHI_01";
             txtIsTrackedIn.Text = "未進站";
-
-            // 管理項目參數範例
-            dgvManageParams.Rows.Add("雷射發振頻率 (Hz)", "100", "是", "數值");
-            dgvManageParams.Rows.Add("雷射功率 (W)", "5500", "是", "數值");
-            dgvManageParams.Rows.Add("吸著氣壓 (kPa)", "-10.5", "否", "數值");
+            // 管理項目參數：優先自 Profile.ManagementItems 與 Profile.Variables 載入
+            dgvManageParams.Rows.Clear();
+            if (_config.Profile?.ManagementItems != null && _config.Profile.ManagementItems.Count > 0)
+            {
+                foreach (var item in _config.Profile.ManagementItems)
+                {
+                    string name = _config.Profile.GetVariableName(item.Key, item.Key);
+                    dgvManageParams.Rows.Add(name, item.Key, item.Value == "Y" ? "是" : "否", "設定");
+                }
+            }
+            else
+            {
+                dgvManageParams.Rows.Add("雷射發振頻率 (Hz)", "100", "是", "數值");
+                dgvManageParams.Rows.Add("雷射功率 (W)", "5500", "是", "數值");
+                dgvManageParams.Rows.Add("吸著氣壓 (kPa)", "-10.5", "否", "數值");
+            }
         }
 
         private void UpdateEapLed()

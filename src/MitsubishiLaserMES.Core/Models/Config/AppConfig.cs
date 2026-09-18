@@ -42,6 +42,8 @@ namespace MitsubishiLaserMES.Core.Models.Config
         public MqttSettings Mqtt { get; set; } = new MqttSettings();
         public OpcSettings Opc { get; set; } = new OpcSettings();
         public LogSettings LogSettings { get; set; } = new LogSettings();
+        public string EquipmentProfilePath { get; set; } = "Dictionaries/DR0026.json";
+        public EquipmentProfile Profile { get; set; } = new EquipmentProfile();
         public string Language { get; set; } = "zh-TW"; // zh-TW 或 en-US
     }
 }
