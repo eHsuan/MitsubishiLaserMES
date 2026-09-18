@@ -9,6 +9,13 @@
   <ItemGroup>
     <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
     <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="1.5.378.156" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Protocol.Core">
+      <HintPath>..\..\dll\Protocol.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

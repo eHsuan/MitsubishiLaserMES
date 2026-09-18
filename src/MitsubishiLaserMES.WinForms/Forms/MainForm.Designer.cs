@@ -98,7 +98,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvManageParams = new System.Windows.Forms.DataGridView();
 
             this.grpOrderActions = new System.Windows.Forms.GroupBox();
-            this.btnQueryOrder = new System.Windows.Forms.Button();
             this.btnTrackIn = new System.Windows.Forms.Button();
             this.btnTrackOut = new System.Windows.Forms.Button();
             this.btnChangeUser = new System.Windows.Forms.Button();
@@ -663,7 +662,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
             // --- grpOrderActions ---
             this.grpOrderActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.grpOrderActions.Controls.Add(this.btnQueryOrder);
             this.grpOrderActions.Controls.Add(this.btnTrackIn);
             this.grpOrderActions.Controls.Add(this.btnTrackOut);
             this.grpOrderActions.Controls.Add(this.btnChangeUser);
@@ -675,43 +673,35 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOrderActions.TabStop = false;
             this.grpOrderActions.Text = "工單作業";
 
-            this.btnQueryOrder.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
-            this.btnQueryOrder.Location = new System.Drawing.Point(15, 25);
-            this.btnQueryOrder.Name = "btnQueryOrder";
-            this.btnQueryOrder.Size = new System.Drawing.Size(135, 38);
-            this.btnQueryOrder.TabIndex = 0;
-            this.btnQueryOrder.Text = "工單查詢";
-            this.btnQueryOrder.UseVisualStyleBackColor = true;
-
             this.btnTrackIn.BackColor = System.Drawing.Color.LightSteelBlue;
             this.btnTrackIn.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
-            this.btnTrackIn.Location = new System.Drawing.Point(15, 75);
+            this.btnTrackIn.Location = new System.Drawing.Point(15, 30);
             this.btnTrackIn.Name = "btnTrackIn";
-            this.btnTrackIn.Size = new System.Drawing.Size(135, 38);
-            this.btnTrackIn.TabIndex = 1;
+            this.btnTrackIn.Size = new System.Drawing.Size(135, 42);
+            this.btnTrackIn.TabIndex = 0;
             this.btnTrackIn.Text = "工單進站";
             this.btnTrackIn.UseVisualStyleBackColor = false;
 
             this.btnTrackOut.BackColor = System.Drawing.Color.LightSkyBlue;
             this.btnTrackOut.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
-            this.btnTrackOut.Location = new System.Drawing.Point(15, 125);
+            this.btnTrackOut.Location = new System.Drawing.Point(15, 85);
             this.btnTrackOut.Name = "btnTrackOut";
-            this.btnTrackOut.Size = new System.Drawing.Size(135, 38);
-            this.btnTrackOut.TabIndex = 2;
+            this.btnTrackOut.Size = new System.Drawing.Size(135, 42);
+            this.btnTrackOut.TabIndex = 1;
             this.btnTrackOut.Text = "工單出站";
             this.btnTrackOut.UseVisualStyleBackColor = false;
 
-            this.btnChangeUser.Location = new System.Drawing.Point(15, 210);
+            this.btnChangeUser.Location = new System.Drawing.Point(15, 160);
             this.btnChangeUser.Name = "btnChangeUser";
-            this.btnChangeUser.Size = new System.Drawing.Size(135, 34);
-            this.btnChangeUser.TabIndex = 3;
+            this.btnChangeUser.Size = new System.Drawing.Size(135, 36);
+            this.btnChangeUser.TabIndex = 2;
             this.btnChangeUser.Text = "更換人員";
             this.btnChangeUser.UseVisualStyleBackColor = true;
 
-            this.btnClearOrder.Location = new System.Drawing.Point(15, 255);
+            this.btnClearOrder.Location = new System.Drawing.Point(15, 205);
             this.btnClearOrder.Name = "btnClearOrder";
-            this.btnClearOrder.Size = new System.Drawing.Size(135, 34);
-            this.btnClearOrder.TabIndex = 4;
+            this.btnClearOrder.Size = new System.Drawing.Size(135, 36);
+            this.btnClearOrder.TabIndex = 3;
             this.btnClearOrder.Text = "清除";
             this.btnClearOrder.UseVisualStyleBackColor = true;
 
@@ -1168,7 +1158,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.DataGridView dgvManageParams;
 
         private System.Windows.Forms.GroupBox grpOrderActions;
-        private System.Windows.Forms.Button btnQueryOrder;
         private System.Windows.Forms.Button btnTrackIn;
         private System.Windows.Forms.Button btnTrackOut;
         private System.Windows.Forms.Button btnChangeUser;

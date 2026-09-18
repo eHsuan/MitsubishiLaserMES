@@ -9,6 +9,9 @@ using MitsubishiLaserMES.Core.Models.Config;
 using MitsubishiLaserMES.Core.Models.Eap;
 using MitsubishiLaserMES.Core.Services.Eap;
 using MitsubishiLaserMES.Core.Services.Opc;
+using Protocol.Core.Base;
+using Protocol.Core.Messages;
+using Protocol.Core.Enums;
 
 namespace MitsubishiLaserMES.Core.Services.Coordination
 {
@@ -64,7 +67,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             OpcService.ProcessedCountChanged += OnOpcProcessedCountChanged;
             OpcService.AlarmTriggered += OnOpcAlarmTriggered;
 
-            // 綁定 EAP 下行指令監聽
+            // 綁定 EAP 下行指令與遠端指令交握處理器
+            EapService.RemoteCommandHandler = HandleRemoteCommandAsync;
             EapService.RemoteCommandReceived += OnRemoteCommandReceived;
             EapService.TerminalDisplayReceived += OnTerminalDisplayReceived;
             EapService.TimeCalibrationReceived += OnTimeCalibrationReceived;
@@ -129,32 +133,46 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             SystemLogMessage?.Invoke("[人員登出] 目前已切換為未登入狀態。");
         }
 
-        public async Task<ReplyTrackInReqPayload> TrackInAsync(TrackInReqPayload req, CancellationToken cancellationToken = default)
+        public async Task<ReplyTrackInReqMessage> TrackInAsync(TrackInReqMessage req, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(req.UserID))
             {
                 req.UserID = CurrentOperatorId;
             }
-            req.Machine = _config.Mqtt.EqID;
-
-            _logger.Info("TrackIn", $"發送進站請求: 工單={req.WorkOrder}, 批號={req.BatchNo}, 卡匣={req.CassetteID}, 數量={req.Qty}");
-            SystemLogMessage?.Invoke($"[工單進站] 發送 TrackInReq: 工單={req.WorkOrder}, 批號={req.BatchNo}, 卡匣={req.CassetteID}, 數量={req.Qty}");
-            var reply = await EapService.SendRequestAsync<TrackInReqPayload, ReplyTrackInReqPayload>(req, cancellationToken).ConfigureAwait(false);
-
-            if (reply.IsPass)
+            req.Machine = _config.Mqtt?.EqID ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(req.Date))
             {
-                string targetRecipe = !string.IsNullOrWhiteSpace(reply.RecipeID) ? reply.RecipeID : req.RecipeID;
+                req.Date = DateTimeUtils.NowEapDate();
+            }
+            if (string.IsNullOrWhiteSpace(req.TransactionID))
+            {
+                req.TransactionID = Guid.NewGuid().ToString();
+            }
+
+            string woStr = req.WorkOrder != null && req.WorkOrder.Count > 0 ? string.Join(",", req.WorkOrder) : string.Empty;
+            string cstStr = req.CassetteID != null && req.CassetteID.Count > 0 ? string.Join(",", req.CassetteID) : string.Empty;
+
+            _logger.Info("TrackIn", $"發送進站請求: 工單={woStr}, 卡匣={cstStr}, 數量={req.Qty}, 操作員={req.UserID}");
+            SystemLogMessage?.Invoke($"[工單進站] 發送 TrackInReq: 工單={woStr}, 卡匣={cstStr}, 數量={req.Qty}");
+
+            var reply = await EapService.SendProtocolRequestAsync<TrackInReqMessage, ReplyTrackInReqMessage>(req, cancellationToken).ConfigureAwait(false);
+
+            if (reply.RtnResult == RtnResult.PASS)
+            {
+                string primaryWo = reply.WorkOrder != null && reply.WorkOrder.Count > 0 ? reply.WorkOrder[0] : (req.WorkOrder != null && req.WorkOrder.Count > 0 ? req.WorkOrder[0] : "");
+                string primaryCst = reply.CassetteID != null && reply.CassetteID.Count > 0 ? reply.CassetteID[0] : (req.CassetteID != null && req.CassetteID.Count > 0 ? req.CassetteID[0] : "");
                 short qty = 0;
-                short.TryParse(req.Qty, out qty);
+                if (!string.IsNullOrWhiteSpace(req.Qty))
+                {
+                    short.TryParse(req.Qty, out qty);
+                }
 
                 var orderInfo = new TrackedInOrderInfo
                 {
-                    WorkOrder = req.WorkOrder,
-                    CassetteId = req.CassetteID,
-                    RecipeId = targetRecipe,
-                    PartNo = reply.PartNo,
-                    ProcessNo = reply.ProcessNo,
-                    ProcessName = reply.ProcessName,
+                    WorkOrder = primaryWo,
+                    CassetteId = primaryCst,
+                    RecipeId = !string.IsNullOrWhiteSpace(OpcService.ActiveProgramFile) ? OpcService.ActiveProgramFile : (CurrentOrder?.RecipeId ?? string.Empty),
+                    PartNo = req.MaterialID ?? string.Empty,
                     TotalQty = qty,
                     TrackInTime = DateTime.Now
                 };
@@ -163,16 +181,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 _trackedInOrders.Add(orderInfo);
                 TrackInCompleted?.Invoke(orderInfo);
 
-                // 若有 Recipe 且 OPC 已連線，自動執行配方交握
-                if (!string.IsNullOrWhiteSpace(targetRecipe) && OpcService.IsConnected)
-                {
-                    _logger.Info("RecipeHandshake", $"自動向雷射機下發 Recipe: {targetRecipe}, 片數: {qty}");
-                    SystemLogMessage?.Invoke($"[自動配方切換] 進站核可，自動向雷射機下發 Recipe: {targetRecipe}");
-                    _ = OpcService.DeliverRecipeAsync(targetRecipe, qty > 0 ? qty : (short)-1, cancellationToken);
-                }
-
-                _logger.Info("TrackIn", $"工單進站成功: 工單={req.WorkOrder}, 合法Panel數={reply.PanelList?.Count ?? 0}");
-                SystemLogMessage?.Invoke($"[工單進站成功] 工單={req.WorkOrder}, 合法Panel數={reply.PanelList?.Count ?? 0}");
+                _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}");
+                SystemLogMessage?.Invoke($"[工單進站成功] 工單={primaryWo}, 卡匣={primaryCst}");
             }
             else
             {
@@ -183,29 +193,67 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             return reply;
         }
 
-        public async Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default)
+        public async Task<ReplyTrackInReqPayload> TrackInAsync(TrackInReqPayload req, CancellationToken cancellationToken = default)
+        {
+            var msg = new TrackInReqMessage
+            {
+                WorkOrder = !string.IsNullOrWhiteSpace(req.WorkOrder) ? new List<string> { req.WorkOrder } : new List<string>(),
+                CassetteID = !string.IsNullOrWhiteSpace(req.CassetteID) ? new List<string> { req.CassetteID } : new List<string>(),
+                MaterialID = req.MaterialID,
+                UserID = req.UserID,
+                ToolingID = req.ToolingID,
+                PanelID = req.PanelID,
+                Qty = req.Qty
+            };
+
+            var replyMsg = await TrackInAsync(msg, cancellationToken).ConfigureAwait(false);
+            return new ReplyTrackInReqPayload
+            {
+                TransactionID = replyMsg.TransactionID,
+                Machine = replyMsg.Machine,
+                RtnResult = replyMsg.RtnResult.ToString(),
+                RtnMsg = replyMsg.RtnMsg,
+                WorkOrder = replyMsg.WorkOrder ?? new List<string>(),
+                CassetteID = replyMsg.CassetteID ?? new List<string>(),
+                UserID = replyMsg.UserID,
+                MaterialID = replyMsg.MaterialID,
+                ToolingID = replyMsg.ToolingID
+            };
+        }
+
+        public async Task<ReplyTrackOutReqMessage> TrackOutAsync(TrackOutReqMessage req, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(req.UserID))
             {
                 req.UserID = CurrentOperatorId;
             }
-            req.Machine = _config.Mqtt.EqID;
-
-            _logger.Info("TrackOut", $"發送出站請求: 出站數量={req.Qty}, 結果={req.Result}, NGCode={req.NGCode}");
-            SystemLogMessage?.Invoke($"[工單出站] 發送 TrackOutReq: 出站數量={req.Qty}, 結果={req.Result}, NGCode={req.NGCode}");
-            var reply = await EapService.SendRequestAsync<TrackOutReqPayload, ReplyTrackOutReqPayload>(req, cancellationToken).ConfigureAwait(false);
-
-            if (reply.IsPass)
+            req.Machine = _config.Mqtt?.EqID ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(req.Date))
             {
-                string wo = req.WorkOrder?.FirstOrDefault() ?? (CurrentOrder?.WorkOrder ?? "");
-                _trackedInOrders.RemoveAll(o => o.WorkOrder == wo);
-                if (CurrentOrder?.WorkOrder == wo)
+                req.Date = DateTimeUtils.NowEapDate();
+            }
+            if (string.IsNullOrWhiteSpace(req.TransactionID))
+            {
+                req.TransactionID = Guid.NewGuid().ToString();
+            }
+
+            string wo = req.WorkOrder != null && req.WorkOrder.Count > 0 ? string.Join(",", req.WorkOrder) : (CurrentOrder?.WorkOrder ?? string.Empty);
+            _logger.Info("TrackOut", $"發送出站請求: 工單={wo}, 數量={req.Qty}, 結果={req.Result}, NGCode={req.NGCode}");
+            SystemLogMessage?.Invoke($"[工單出站] 發送 TrackOutReq: 工單={wo}, 數量={req.Qty}, 結果={req.Result}");
+
+            var reply = await EapService.SendProtocolRequestAsync<TrackOutReqMessage, ReplyTrackOutReqMessage>(req, cancellationToken).ConfigureAwait(false);
+
+            if (reply.RtnResult == RtnResult.PASS)
+            {
+                string primaryWo = req.WorkOrder?.FirstOrDefault() ?? (CurrentOrder?.WorkOrder ?? "");
+                _trackedInOrders.RemoveAll(o => o.WorkOrder == primaryWo);
+                if (CurrentOrder?.WorkOrder == primaryWo)
                 {
                     CurrentOrder = null;
                 }
-                TrackOutCompleted?.Invoke(wo);
-                _logger.Info("TrackOut", $"工單出站成功: 工單 {wo} 帳務過帳完成。");
-                SystemLogMessage?.Invoke($"[工單出站成功] 工單 {wo} 帳務過帳完成。");
+                TrackOutCompleted?.Invoke(primaryWo);
+                _logger.Info("TrackOut", $"工單出站成功: 工單 {primaryWo} 帳務過帳完成。");
+                SystemLogMessage?.Invoke($"[工單出站成功] 工單 {primaryWo} 帳務過帳完成。");
             }
             else
             {
@@ -214,6 +262,35 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             }
 
             return reply;
+        }
+
+        public async Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default)
+        {
+            var msg = new TrackOutReqMessage
+            {
+                WorkOrder = req.WorkOrder ?? new List<string>(),
+                CassetteID = req.CassetteID ?? new List<string>(),
+                MaterialID = req.MaterialID,
+                UserID = req.UserID,
+                ToolingID = req.ToolingID,
+                Qty = req.Qty,
+                Result = req.Result,
+                NGCode = req.NGCode
+            };
+
+            var replyMsg = await TrackOutAsync(msg, cancellationToken).ConfigureAwait(false);
+            return new ReplyTrackOutReqPayload
+            {
+                TransactionID = replyMsg.TransactionID,
+                Machine = replyMsg.Machine,
+                RtnResult = replyMsg.RtnResult.ToString(),
+                RtnMsg = replyMsg.RtnMsg,
+                WorkOrder = replyMsg.WorkOrder?.FirstOrDefault() ?? string.Empty,
+                CassetteID = replyMsg.CassetteID?.FirstOrDefault() ?? string.Empty,
+                UserID = replyMsg.UserID,
+                MaterialID = replyMsg.MaterialID,
+                ToolingID = replyMsg.ToolingID
+            };
         }
 
         public async Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default)
@@ -291,29 +368,100 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         #endregion
 
-        #region EAP 下行指令處理
+        #region EAP 下行指令處理與配方交握
 
-        private void OnRemoteCommandReceived(RemoteCommandReqPayload cmd)
+        private async Task<ReplyRemoteCMDMessage> HandleRemoteCommandAsync(RemoteCMDMessage cmd)
         {
-            SystemLogMessage?.Invoke($"[EAP 遠端指令] Type: {cmd.RemoteCMDType}, Recipe: {cmd.RecipeID}");
-            if (string.Equals(cmd.RemoteCMDType, "PP_SELECT", StringComparison.OrdinalIgnoreCase))
+            var reply = new ReplyRemoteCMDMessage
             {
-                if (!string.IsNullOrWhiteSpace(cmd.RecipeID))
+                TransactionID = cmd.TransactionID,
+                Machine = _config.Mqtt?.EqID ?? string.Empty,
+                Date = DateTimeUtils.NowEapDate(),
+                RemoteCMDType = cmd.RemoteCMDType
+            };
+
+            SystemLogMessage?.Invoke($"[EAP 遠端指令交握] 收到 RemoteCMD: Type={cmd.RemoteCMDType}, RecipeID={cmd.RecipeID}");
+            _logger.Info("RemoteCMD", $"收到 EAP 遠端指令: Type={cmd.RemoteCMDType}, RecipeID={cmd.RecipeID}");
+
+            try
+            {
+                switch (cmd.RemoteCMDType)
                 {
-                    _ = OpcService.DeliverRecipeAsync(cmd.RecipeID, -1);
+                    case RemoteCommandType.PP_SELECT:
+                        if (string.IsNullOrWhiteSpace(cmd.RecipeID))
+                        {
+                            reply.RtnResult = RtnResult.FAIL;
+                            reply.RtnMsg = "RecipeID is empty";
+                        }
+                        else if (!OpcService.IsConnected)
+                        {
+                            reply.RtnResult = RtnResult.FAIL;
+                            reply.RtnMsg = "OPC UA is disconnected, cannot deliver recipe to laser machine";
+                        }
+                        else
+                        {
+                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 Recipe: {cmd.RecipeID} 至雷射機...");
+                            bool success = await OpcService.DeliverRecipeAsync(cmd.RecipeID, -1).ConfigureAwait(false);
+                            if (success)
+                            {
+                                reply.RtnResult = RtnResult.PASS;
+                                reply.RtnMsg = $"Recipe {cmd.RecipeID} delivered and acknowledged successfully";
+                                SystemLogMessage?.Invoke($"[配方切換交握成功] 雷射機已確認切換至 Recipe: {cmd.RecipeID}");
+
+                                if (CurrentOrder != null)
+                                {
+                                    CurrentOrder.RecipeId = cmd.RecipeID;
+                                }
+                            }
+                            else
+                            {
+                                reply.RtnResult = RtnResult.FAIL;
+                                reply.RtnMsg = $"DeliverRecipe failed or timed out for Recipe: {cmd.RecipeID}";
+                                SystemLogMessage?.Invoke($"[配方切換交握失敗] 雷射機配方切換失敗或逾時！");
+                            }
+                        }
+                        break;
+
+                    case RemoteCommandType.START:
+                        bool startOk = await OpcService.StartScheduleAsync().ConfigureAwait(false);
+                        reply.RtnResult = startOk ? RtnResult.PASS : RtnResult.FAIL;
+                        reply.RtnMsg = startOk ? "START command executed successfully" : "START command failed";
+                        break;
+
+                    case RemoteCommandType.STOP:
+                        bool stopOk = await OpcService.StopScheduleAsync().ConfigureAwait(false);
+                        reply.RtnResult = stopOk ? RtnResult.PASS : RtnResult.FAIL;
+                        reply.RtnMsg = stopOk ? "STOP command executed successfully" : "STOP command failed";
+                        break;
+
+                    case RemoteCommandType.PAUSE:
+                    case RemoteCommandType.RESUME:
+                        reply.RtnResult = RtnResult.PASS;
+                        reply.RtnMsg = $"{cmd.RemoteCMDType} acknowledged";
+                        break;
+
+                    default:
+                        reply.RtnResult = RtnResult.FAIL;
+                        reply.RtnMsg = $"Unsupported command type: {cmd.RemoteCMDType}";
+                        break;
                 }
             }
-            else if (string.Equals(cmd.RemoteCMDType, "START", StringComparison.OrdinalIgnoreCase))
+            catch (Exception ex)
             {
-                _ = OpcService.StartScheduleAsync();
+                reply.RtnResult = RtnResult.FAIL;
+                reply.RtnMsg = $"Exception executing {cmd.RemoteCMDType}: {ex.Message}";
+                _logger.Error("RemoteCMD", $"執行遠端指令異常: {ex.Message} {ex.StackTrace}", _config.Mqtt?.EqID);
             }
-            else if (string.Equals(cmd.RemoteCMDType, "STOP", StringComparison.OrdinalIgnoreCase))
-            {
-                _ = OpcService.StopScheduleAsync();
-            }
+
+            return reply;
         }
 
-        private void OnTerminalDisplayReceived(TerminalDisplayReqPayload msg)
+        private void OnRemoteCommandReceived(RemoteCMDMessage cmd)
+        {
+            SystemLogMessage?.Invoke($"[EAP 遠端指令通知] Type: {cmd.RemoteCMDType}, Recipe: {cmd.RecipeID}");
+        }
+
+        private void OnTerminalDisplayReceived(TerminalDisplayMessage msg)
         {
             SystemLogMessage?.Invoke($"[EAP 終端訊息] {msg.Message}");
             TerminalMessageNotified?.Invoke(msg.Message);

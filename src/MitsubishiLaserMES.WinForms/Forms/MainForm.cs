@@ -8,6 +8,8 @@ using MitsubishiLaserMES.Core.Common;
 using MitsubishiLaserMES.Core.Models.Config;
 using MitsubishiLaserMES.Core.Models.Eap;
 using MitsubishiLaserMES.Core.Services.Coordination;
+using Protocol.Core.Messages;
+using Protocol.Core.Enums;
 
 namespace MitsubishiLaserMES.WinForms.Forms
 {
@@ -74,8 +76,10 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 txtIsTrackedIn.Text = "已進站";
                 txtIsTrackedIn.ForeColor = Color.DarkGreen;
 
-                // 更新已進站清單
+                // 更新已進站清單與按鈕狀態
                 dgvTrackedIn.Rows.Add(order.WorkOrder, order.CassetteId);
+                btnTrackIn.Enabled = false;
+                btnTrackOut.Enabled = true;
                 SetResult("PASS", "200", $"工單 {order.WorkOrder} 進站成功，配方: {order.RecipeId}");
             });
 
@@ -91,6 +95,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 }
                 txtIsTrackedIn.Text = "未進站";
                 txtIsTrackedIn.ForeColor = Color.Black;
+                btnTrackIn.Enabled = true;
+                btnTrackOut.Enabled = false;
                 SetResult("PASS", "200", $"工單 {wo} 出站過帳成功。");
             });
 
@@ -220,11 +226,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             btnToggleLang.Click += (s, e) => ToggleLanguage();
 
-            // 工單作業按鈕
-            btnQueryOrder.Click += (s, e) =>
-            {
-                MessageBox.Show(this, "新版 EAP 規範已將「工單查詢」整合至「工單進站」流程。\n請直接點擊「工單進站」即可同步查詢與核可！", "功能提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            };
+            // 工單作業按鈕初值
+            btnTrackIn.Enabled = true;
+            btnTrackOut.Enabled = false;
 
             btnTrackIn.Click += async (s, e) => await DoTrackInAsync();
             btnTrackOut.Click += async (s, e) => await DoTrackOutAsync();
@@ -369,23 +373,23 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 return;
             }
 
-            var req = new TrackInReqPayload
+            var req = new TrackInReqMessage
             {
-                WorkOrder = wo,
-                BatchNo = string.IsNullOrWhiteSpace(txtBatchNo.Text) ? wo : txtBatchNo.Text.Trim(),
+                WorkOrder = new List<string> { wo },
+                CassetteID = new List<string> { "C" + wo },
                 MaterialID = txtPartNo.Text.Trim(),
-                CassetteID = "C" + wo,
                 UserID = _coordinator.CurrentOperatorId,
-                RecipeID = txtRecipeId.Text.Trim(),
+                ToolingID = string.Empty,
+                PanelID = string.Empty,
                 Qty = string.IsNullOrWhiteSpace(txtTotalQty.Text) ? "10" : txtTotalQty.Text.Trim()
             };
 
-            var reply = await MaskWaitForm.RunWithWaitAsync(this, "系統處理中... 正在向 EAP 申請工單進站與配方確認", async () =>
+            var reply = await MaskWaitForm.RunWithWaitAsync(this, "系統處理中... 正在向 EAP 申請工單進站與配方交握確認", async () =>
             {
                 return await _coordinator.TrackInAsync(req);
             });
 
-            if (!reply.IsPass)
+            if (reply.RtnResult != RtnResult.PASS)
             {
                 MessageBox.Show(this, $"工單進站失敗：{reply.RtnMsg}", "EAP 進站核可失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 SetResult("FAIL", "500", reply.RtnMsg);
@@ -455,6 +459,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtComponentNo.Clear();
             dgvNgList.Rows.Clear();
             chkNoNg.Checked = true;
+            if (!_coordinator.IsTrackedIn)
+            {
+                btnTrackIn.Enabled = true;
+                btnTrackOut.Enabled = false;
+            }
         }
 
         private void InitSampleData()
@@ -571,7 +580,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 tabWorkOrder.Text = "Work Order";
                 tabEquipment.Text = "Equipment";
                 tabItTest.Text = "IT Testing";
-                btnQueryOrder.Text = "Order Query";
                 btnTrackIn.Text = "Track In";
                 btnTrackOut.Text = "Track Out";
                 btnChangeUser.Text = "Switch User";
@@ -588,7 +596,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 tabWorkOrder.Text = "工單功能";
                 tabEquipment.Text = "設備功能";
                 tabItTest.Text = "IT 測試";
-                btnQueryOrder.Text = "工單查詢";
                 btnTrackIn.Text = "工單進站";
                 btnTrackOut.Text = "工單出站";
                 btnChangeUser.Text = "更換人員";

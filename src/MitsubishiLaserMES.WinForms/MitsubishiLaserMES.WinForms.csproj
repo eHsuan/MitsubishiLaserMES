@@ -13,11 +13,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Protocol.Core">
+      <HintPath>..\..\dll\Protocol.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\Dictionaries\**\*.*">
       <Link>Dictionaries\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\dll\Protocol.Core.dll">
+      <Link>Protocol.Core.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

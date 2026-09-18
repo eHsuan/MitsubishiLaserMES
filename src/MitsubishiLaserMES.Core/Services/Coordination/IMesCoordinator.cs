@@ -6,6 +6,7 @@ using MitsubishiLaserMES.Core.Common;
 using MitsubishiLaserMES.Core.Models.Eap;
 using MitsubishiLaserMES.Core.Services.Eap;
 using MitsubishiLaserMES.Core.Services.Opc;
+using Protocol.Core.Messages;
 
 namespace MitsubishiLaserMES.Core.Services.Coordination
 {
@@ -43,6 +44,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         Task<bool> InitializeAsync(CancellationToken cancellationToken = default);
         Task<UserVerifyReplyPayload> LoginWithBarcodeAsync(string userBarcode, CancellationToken cancellationToken = default);
         void LogoutOperator();
+        Task<ReplyTrackInReqMessage> TrackInAsync(TrackInReqMessage req, CancellationToken cancellationToken = default);
+        Task<ReplyTrackOutReqMessage> TrackOutAsync(TrackOutReqMessage req, CancellationToken cancellationToken = default);
         Task<ReplyTrackInReqPayload> TrackInAsync(TrackInReqPayload req, CancellationToken cancellationToken = default);
         Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default);
         Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default);

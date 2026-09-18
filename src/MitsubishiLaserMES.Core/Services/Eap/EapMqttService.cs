@@ -12,6 +12,9 @@ using MitsubishiLaserMES.Core.Common;
 using MitsubishiLaserMES.Core.Models.Config;
 using MitsubishiLaserMES.Core.Models.Eap;
 using MitsubishiLaserMES.Core.Logging;
+using Protocol.Core.Base;
+using Protocol.Core.Messages;
+using Protocol.Core.Enums;
 
 namespace MitsubishiLaserMES.Core.Services.Eap
 {
@@ -35,9 +38,11 @@ namespace MitsubishiLaserMES.Core.Services.Eap
         public event Action<string, string> MessageSentLog;
         public event Action<string> LogMessage;
 
-        public event Action<RemoteCommandReqPayload> RemoteCommandReceived;
-        public event Action<TerminalDisplayReqPayload> TerminalDisplayReceived;
+        public event Action<RemoteCMDMessage> RemoteCommandReceived;
+        public event Action<TerminalDisplayMessage> TerminalDisplayReceived;
         public event Action<string> TimeCalibrationReceived;
+
+        public Func<RemoteCMDMessage, Task<ReplyRemoteCMDMessage>> RemoteCommandHandler { get; set; }
 
         public EapMqttService(MqttSettings settings, OfflineBufferService bufferService = null)
         {
@@ -226,6 +231,110 @@ namespace MitsubishiLaserMES.Core.Services.Eap
             }
         }
 
+        public async Task<TReply> SendProtocolRequestAsync<TReq, TReply>(TReq reqPayload, CancellationToken cancellationToken = default)
+            where TReq : BaseMessage
+            where TReply : ReplyBase, new()
+        {
+            if (string.IsNullOrWhiteSpace(reqPayload.TransactionID))
+            {
+                reqPayload.TransactionID = Guid.NewGuid().ToString();
+            }
+            if (string.IsNullOrWhiteSpace(reqPayload.Machine))
+            {
+                reqPayload.Machine = _settings.EqID;
+            }
+            if (string.IsNullOrWhiteSpace(reqPayload.Date))
+            {
+                reqPayload.Date = DateTimeUtils.NowEapDate();
+            }
+
+            var envelope = new EapEnvelope<TReq>(reqPayload);
+            var json = JsonConvert.SerializeObject(envelope, Formatting.None);
+
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingRequests[reqPayload.TransactionID] = tcs;
+
+            try
+            {
+                if (!IsConnected)
+                {
+                    throw new InvalidOperationException("EAP MQTT 尚未連線，無法發送請求。");
+                }
+
+                await PublishRawAsync(_settings.ReportTopic, json, cancellationToken).ConfigureAwait(false);
+
+                // 設定 T1 逾時時間
+                int timeoutMs = _settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 30000;
+                using var timeoutCts = new CancellationTokenSource(timeoutMs);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+                using (linkedCts.Token.Register(() => tcs.TrySetCanceled()))
+                {
+                    string replyJson = await tcs.Task.ConfigureAwait(false);
+                    return JsonConvert.DeserializeObject<TReply>(replyJson) ?? new TReply();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                LogMessage?.Invoke($"[EAP 逾時] CMD: {reqPayload.CMD} 等待 EAP 回覆超過 T1 ({_settings.TimeoutT1Ms / 1000}s) 逾時。");
+                return new TReply
+                {
+                    TransactionID = reqPayload.TransactionID,
+                    RtnResult = RtnResult.FAIL,
+                    RtnMsg = "System No Response (Timeout)"
+                };
+            }
+            finally
+            {
+                _pendingRequests.TryRemove(reqPayload.TransactionID, out _);
+            }
+        }
+
+        public async Task<bool> PublishProtocolReportAsync<T>(T payload, bool bufferIfOffline = true)
+            where T : BaseMessage
+        {
+            if (string.IsNullOrWhiteSpace(payload.TransactionID))
+            {
+                payload.TransactionID = Guid.NewGuid().ToString();
+            }
+            if (string.IsNullOrWhiteSpace(payload.Machine))
+            {
+                payload.Machine = _settings.EqID;
+            }
+            if (string.IsNullOrWhiteSpace(payload.Date))
+            {
+                payload.Date = DateTimeUtils.NowEapDate();
+            }
+
+            var envelope = new EapEnvelope<T>(payload);
+            var json = JsonConvert.SerializeObject(envelope, Formatting.None);
+
+            if (!IsConnected)
+            {
+                if (bufferIfOffline)
+                {
+                    LogMessage?.Invoke($"[MQTT 離線] 訊息存入暫存佇列 (CMD: {payload.CMD})");
+                    _bufferService.Enqueue(_settings.ReportTopic, json);
+                }
+                return false;
+            }
+
+            try
+            {
+                await PublishRawAsync(_settings.ReportTopic, json).ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogMessage?.Invoke($"[MQTT 發送異常] {ex.Message}");
+                if (bufferIfOffline)
+                {
+                    _bufferService.Enqueue(_settings.ReportTopic, json);
+                }
+                return false;
+            }
+        }
+
         private async Task PublishRawAsync(string topic, string json, CancellationToken cancellationToken = default)
         {
             var msg = new MqttApplicationMessageBuilder()
@@ -275,64 +384,115 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                     IsAliveGreen = true;
                     AliveStatusChanged?.Invoke(true);
 
-                    var reply = new AliveCheckReplyPayload
+                    var reply = new IamHereMessage
                     {
                         TransactionID = transactionId,
                         Machine = _settings.EqID,
-                        RtnResult = "PASS"
+                        Date = DateTimeUtils.NowEapDate()
                     };
-                    _ = PublishReportAsync(reply, false);
+                    _ = PublishProtocolReportAsync(reply, false);
                     return Task.CompletedTask;
                 }
 
                 // 4. BC 時間校正 TimeCalibrate
                 if (string.Equals(cmd, "TimeCalibrate", StringComparison.OrdinalIgnoreCase))
                 {
-                    string serverDate = payloadObj["DATE"]?.ToString() ?? DateTimeUtils.NowEapDate();
+                    string serverDate = payloadObj["Date"]?.ToString() ?? payloadObj["DATE"]?.ToString() ?? DateTimeUtils.NowEapDate();
                     TimeCalibrationReceived?.Invoke(serverDate);
 
-                    var reply = new TimeCalibrationReplyPayload
+                    var reply = new ReplyTimeCalibrateMessage
                     {
                         TransactionID = transactionId,
                         Machine = _settings.EqID,
-                        DATE = DateTimeUtils.NowEapDate(),
-                        RtnResult = "PASS"
+                        Date = DateTimeUtils.NowEapDate(),
+                        RtnResult = RtnResult.PASS
                     };
-                    _ = PublishReportAsync(reply, false);
+                    _ = PublishProtocolReportAsync(reply, false);
                     return Task.CompletedTask;
                 }
 
-                // 5. BC 遠端指令 RemoteCMD
+                // 5. BC 遠端指令 RemoteCMD (支援交握雷射機配方後非同步回覆)
                 if (string.Equals(cmd, "RemoteCMD", StringComparison.OrdinalIgnoreCase))
                 {
-                    var remoteCmd = payloadObj.ToObject<RemoteCommandReqPayload>();
+                    RemoteCMDMessage remoteCmd = null;
+                    try
+                    {
+                        remoteCmd = JsonConvert.DeserializeObject<RemoteCMDMessage>(payloadObj.ToString());
+                    }
+                    catch { }
+
+                    if (remoteCmd == null)
+                    {
+                        remoteCmd = new RemoteCMDMessage
+                        {
+                            TransactionID = transactionId,
+                            Machine = _settings.EqID,
+                            Date = DateTimeUtils.NowEapDate()
+                        };
+                    }
+
                     RemoteCommandReceived?.Invoke(remoteCmd);
 
-                    var reply = new RemoteCommandReplyPayload
+                    if (RemoteCommandHandler != null)
                     {
-                        TransactionID = transactionId,
-                        Machine = _settings.EqID,
-                        RemoteCMDType = remoteCmd?.RemoteCMDType ?? string.Empty,
-                        RtnResult = "PASS",
-                        RtnMsg = $"[{remoteCmd?.RemoteCMDType}] executed successfully"
-                    };
-                    _ = PublishReportAsync(reply, false);
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var reply = await RemoteCommandHandler(remoteCmd).ConfigureAwait(false);
+                                if (reply != null)
+                                {
+                                    if (string.IsNullOrWhiteSpace(reply.TransactionID)) reply.TransactionID = transactionId;
+                                    if (string.IsNullOrWhiteSpace(reply.Machine)) reply.Machine = _settings.EqID;
+                                    if (string.IsNullOrWhiteSpace(reply.Date)) reply.Date = DateTimeUtils.NowEapDate();
+                                    await PublishProtocolReportAsync(reply, false).ConfigureAwait(false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogMessage?.Invoke($"[RemoteCMD 處理異常] {ex.Message}");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        var reply = new ReplyRemoteCMDMessage
+                        {
+                            TransactionID = transactionId,
+                            Machine = _settings.EqID,
+                            Date = DateTimeUtils.NowEapDate(),
+                            RemoteCMDType = remoteCmd.RemoteCMDType,
+                            RtnResult = RtnResult.PASS,
+                            RtnMsg = $"[{remoteCmd.RemoteCMDType}] executed successfully"
+                        };
+                        _ = PublishProtocolReportAsync(reply, false);
+                    }
                     return Task.CompletedTask;
                 }
 
                 // 6. BC 遠端訊息 TerminalDisplay
                 if (string.Equals(cmd, "TerminalDisplay", StringComparison.OrdinalIgnoreCase))
                 {
-                    var termMsg = payloadObj.ToObject<TerminalDisplayReqPayload>();
-                    TerminalDisplayReceived?.Invoke(termMsg);
+                    TerminalDisplayMessage termMsg = null;
+                    try
+                    {
+                        termMsg = JsonConvert.DeserializeObject<TerminalDisplayMessage>(payloadObj.ToString());
+                    }
+                    catch { }
 
-                    var reply = new TerminalDisplayReplyPayload
+                    if (termMsg != null)
+                    {
+                        TerminalDisplayReceived?.Invoke(termMsg);
+                    }
+
+                    var reply = new ReplyTerminalDisplayMessage
                     {
                         TransactionID = transactionId,
                         Machine = _settings.EqID,
-                        RtnResult = "PASS"
+                        Date = DateTimeUtils.NowEapDate(),
+                        RtnResult = RtnResult.PASS
                     };
-                    _ = PublishReportAsync(reply, false);
+                    _ = PublishProtocolReportAsync(reply, false);
                     return Task.CompletedTask;
                 }
             }
