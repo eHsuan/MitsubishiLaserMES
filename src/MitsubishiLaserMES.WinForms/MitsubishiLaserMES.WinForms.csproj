@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MitsubishiLaserMES.Core\MitsubishiLaserMES.Core.csproj" />
+    <ProjectReference Include="..\MitsubishiLaser.Simulator\MitsubishiLaser.Simulator.csproj" />
   </ItemGroup>
 
   <ItemGroup>

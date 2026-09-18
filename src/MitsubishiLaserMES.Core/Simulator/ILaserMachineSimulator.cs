@@ -16,6 +16,9 @@ namespace MitsubishiLaserMES.Core.Simulator
         ushort LastHostWatchDog { get; }
         int WatchDogCountdownSec { get; }
         bool IsWatchDogTimeout { get; }
+        bool IsWatchDogEnabled { get; set; }
+        bool HasReceivedFirstHeartbeat { get; }
+        void FeedWatchDog(ushort? customDog = null);
 
         string RemoteLotId { get; }
         bool GetRecipeRequest { get; }

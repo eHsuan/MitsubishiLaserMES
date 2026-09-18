@@ -119,6 +119,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnModeSemiAuto = new System.Windows.Forms.Button();
             this.btnModeAuto = new System.Windows.Forms.Button();
             this.btnStartSchedule = new System.Windows.Forms.Button();
+            this.btnOpenSimulator = new System.Windows.Forms.Button();
 
             this.grpAlarmList = new System.Windows.Forms.GroupBox();
             this.dgvAlarms = new System.Windows.Forms.DataGridView();
@@ -731,6 +732,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOpcStatus.Controls.Add(this.btnModeSemiAuto);
             this.grpOpcStatus.Controls.Add(this.btnModeAuto);
             this.grpOpcStatus.Controls.Add(this.btnStartSchedule);
+            this.grpOpcStatus.Controls.Add(this.btnOpenSimulator);
             this.grpOpcStatus.Location = new System.Drawing.Point(15, 15);
             this.grpOpcStatus.Name = "grpOpcStatus";
             this.grpOpcStatus.Size = new System.Drawing.Size(1095, 180);
@@ -839,6 +841,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnStartSchedule.TabIndex = 13;
             this.btnStartSchedule.Text = "啟動連續運轉";
             this.btnStartSchedule.UseVisualStyleBackColor = false;
+
+            this.btnOpenSimulator.BackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnOpenSimulator.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.btnOpenSimulator.Location = new System.Drawing.Point(915, 22);
+            this.btnOpenSimulator.Name = "btnOpenSimulator";
+            this.btnOpenSimulator.Size = new System.Drawing.Size(155, 34);
+            this.btnOpenSimulator.TabIndex = 14;
+            this.btnOpenSimulator.Text = "開啟機台模擬器 (OPC)";
+            this.btnOpenSimulator.UseVisualStyleBackColor = false;
 
             // --- grpAlarmList ---
             this.grpAlarmList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -1178,6 +1189,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.Button btnModeSemiAuto;
         private System.Windows.Forms.Button btnModeAuto;
         private System.Windows.Forms.Button btnStartSchedule;
+        private System.Windows.Forms.Button btnOpenSimulator;
 
         private System.Windows.Forms.GroupBox grpAlarmList;
         private System.Windows.Forms.DataGridView dgvAlarms;

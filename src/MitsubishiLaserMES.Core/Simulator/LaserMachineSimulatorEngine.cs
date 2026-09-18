@@ -33,6 +33,8 @@ namespace MitsubishiLaserMES.Core.Simulator
         public ushort LastHostWatchDog { get; private set; } = 0;
         public int WatchDogCountdownSec { get; private set; } = 10;
         public bool IsWatchDogTimeout { get; private set; } = false;
+        public bool IsWatchDogEnabled { get; set; } = true;
+        public bool HasReceivedFirstHeartbeat { get; private set; } = false;
 
         // 配方請求與交握
         public string RemoteLotId { get; private set; } = string.Empty;
@@ -130,6 +132,9 @@ namespace MitsubishiLaserMES.Core.Simulator
         {
             lock (_lock)
             {
+                WatchDogCountdownSec = 10;
+                IsWatchDogTimeout = false;
+
                 if (slotIndex >= 0 && slotIndex < 10)
                 {
                     _alarms[slotIndex].IsActive = false;
@@ -156,6 +161,43 @@ namespace MitsubishiLaserMES.Core.Simulator
                     }
                 }
                 NotifyStateChanged();
+            }
+        }
+
+        public void FeedWatchDog(ushort? customDog = null)
+        {
+            lock (_lock)
+            {
+                ushort dog = customDog ?? (ushort)(LastHostWatchDog + 1);
+                LastHostWatchDog = dog;
+                WatchDogCountdownSec = 10;
+                HasReceivedFirstHeartbeat = true;
+
+                if (IsWatchDogTimeout)
+                {
+                    IsWatchDogTimeout = false;
+                    Log($"[WatchDog 心跳恢復] 上位機心跳更新 (Dog: {dog})，解除通訊異常。");
+                    ResetAlarmByNo(9999);
+                }
+                NotifyStateChanged();
+            }
+        }
+
+        private void ResetAlarmByNo(long alarmNo)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (_alarms[i].IsActive && _alarms[i].AlarmNo == alarmNo)
+                {
+                    _alarms[i].IsActive = false;
+                    _alarms[i].AlarmNo = 0;
+                    _alarms[i].AlarmMessage = string.Empty;
+                    Log($"[自動清除警報] 已自動清除 #{alarmNo} 警報。");
+                }
+            }
+            if (!_alarms.Any(a => a.IsActive) && StatusCode == MachineStatus.MachineDown)
+            {
+                SetMachineStatus(MachineStatus.Idle);
             }
         }
 
@@ -208,6 +250,15 @@ namespace MitsubishiLaserMES.Core.Simulator
             lock (_lock)
             {
                 OpcMode = mode;
+                if (mode == MachineOperatingMode.Offline)
+                {
+                    WatchDogCountdownSec = 10;
+                    if (IsWatchDogTimeout)
+                    {
+                        IsWatchDogTimeout = false;
+                        ResetAlarmByNo(9999);
+                    }
+                }
                 Log($"[模式切換] 機台 OPC 模式切換為: {mode}");
                 NotifyStateChanged();
             }
@@ -342,14 +393,7 @@ namespace MitsubishiLaserMES.Core.Simulator
                     // 1. Host WatchDog 寫入
                     case LaserOpcNode.HostWatchDog:
                         ushort dog = Convert.ToUInt16(value);
-                        LastHostWatchDog = dog;
-                        WatchDogCountdownSec = 10;
-                        if (IsWatchDogTimeout)
-                        {
-                            IsWatchDogTimeout = false;
-                            Log("[WatchDog 心跳恢復] 上位機心跳更新，解除通訊異常。");
-                        }
-                        NotifyStateChanged();
+                        FeedWatchDog(dog);
                         return true;
 
                     // 2. 模式切換請求
@@ -451,6 +495,27 @@ namespace MitsubishiLaserMES.Core.Simulator
         {
             lock (_lock)
             {
+                // 1. 若未啟用 WatchDog 監控，維持滿格不倒數
+                if (!IsWatchDogEnabled)
+                {
+                    WatchDogCountdownSec = 10;
+                    return;
+                }
+
+                // 2. 若機台處於離線 (Offline) 模式，上位機心跳不監控
+                if (OpcMode == MachineOperatingMode.Offline)
+                {
+                    WatchDogCountdownSec = 10;
+                    return;
+                }
+
+                // 3. 若尚未收到過上位機第 1 次心跳 (未連線/待命中)，維持待命不倒數亦不逾時報警
+                if (!HasReceivedFirstHeartbeat)
+                {
+                    WatchDogCountdownSec = 10;
+                    return;
+                }
+
                 if (WatchDogCountdownSec > 0)
                 {
                     WatchDogCountdownSec--;

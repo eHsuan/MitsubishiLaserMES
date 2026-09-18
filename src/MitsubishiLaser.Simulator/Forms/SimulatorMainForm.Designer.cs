@@ -32,6 +32,8 @@ namespace MitsubishiLaser.Simulator.Forms
             this.lblWatchDogVal = new System.Windows.Forms.Label();
             this.pbWatchDog = new System.Windows.Forms.ProgressBar();
             this.lblWatchDogTitle = new System.Windows.Forms.Label();
+            this.chkWatchDogEnable = new System.Windows.Forms.CheckBox();
+            this.btnFeedDog = new System.Windows.Forms.Button();
 
             // 配方交握區
             this.grpRecipe = new System.Windows.Forms.GroupBox();
@@ -105,6 +107,8 @@ namespace MitsubishiLaser.Simulator.Forms
             this.grpDashboard.Controls.Add(this.lblStatusBadge);
             this.grpDashboard.Controls.Add(this.lblModeBadge);
             this.grpDashboard.Controls.Add(this.lblWatchDogTitle);
+            this.grpDashboard.Controls.Add(this.chkWatchDogEnable);
+            this.grpDashboard.Controls.Add(this.btnFeedDog);
             this.grpDashboard.Controls.Add(this.pbWatchDog);
             this.grpDashboard.Controls.Add(this.lblWatchDogVal);
             this.grpDashboard.Location = new System.Drawing.Point(12, 10);
@@ -184,26 +188,45 @@ namespace MitsubishiLaser.Simulator.Forms
             // WatchDog
             this.lblWatchDogTitle.AutoSize = true;
             this.lblWatchDogTitle.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
-            this.lblWatchDogTitle.Location = new System.Drawing.Point(760, 24);
+            this.lblWatchDogTitle.Location = new System.Drawing.Point(680, 22);
             this.lblWatchDogTitle.Name = "lblWatchDogTitle";
-            this.lblWatchDogTitle.Size = new System.Drawing.Size(193, 16);
+            this.lblWatchDogTitle.Size = new System.Drawing.Size(145, 16);
             this.lblWatchDogTitle.TabIndex = 8;
-            this.lblWatchDogTitle.Text = "Host WatchDog 心跳監控 (10s超時):";
+            this.lblWatchDogTitle.Text = "Host WatchDog 心跳監控:";
 
-            this.pbWatchDog.Location = new System.Drawing.Point(763, 45);
+            this.chkWatchDogEnable.AutoSize = true;
+            this.chkWatchDogEnable.Checked = true;
+            this.chkWatchDogEnable.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkWatchDogEnable.Font = new System.Drawing.Font("微軟正黑體", 9F);
+            this.chkWatchDogEnable.Location = new System.Drawing.Point(830, 20);
+            this.chkWatchDogEnable.Name = "chkWatchDogEnable";
+            this.chkWatchDogEnable.Size = new System.Drawing.Size(75, 20);
+            this.chkWatchDogEnable.TabIndex = 9;
+            this.chkWatchDogEnable.Text = "啟用監控";
+            this.chkWatchDogEnable.UseVisualStyleBackColor = true;
+
+            this.btnFeedDog.Font = new System.Drawing.Font("微軟正黑體", 8.5F);
+            this.btnFeedDog.Location = new System.Drawing.Point(910, 17);
+            this.btnFeedDog.Name = "btnFeedDog";
+            this.btnFeedDog.Size = new System.Drawing.Size(95, 25);
+            this.btnFeedDog.TabIndex = 10;
+            this.btnFeedDog.Text = "手動餵狗 (+1)";
+            this.btnFeedDog.UseVisualStyleBackColor = true;
+
+            this.pbWatchDog.Location = new System.Drawing.Point(683, 45);
             this.pbWatchDog.Maximum = 10;
             this.pbWatchDog.Name = "pbWatchDog";
             this.pbWatchDog.Size = new System.Drawing.Size(220, 20);
-            this.pbWatchDog.TabIndex = 9;
+            this.pbWatchDog.TabIndex = 11;
             this.pbWatchDog.Value = 10;
 
             this.lblWatchDogVal.AutoSize = true;
-            this.lblWatchDogVal.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            this.lblWatchDogVal.Location = new System.Drawing.Point(995, 47);
+            this.lblWatchDogVal.Font = new System.Drawing.Font("Arial", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblWatchDogVal.Location = new System.Drawing.Point(910, 47);
             this.lblWatchDogVal.Name = "lblWatchDogVal";
-            this.lblWatchDogVal.Size = new System.Drawing.Size(115, 16);
-            this.lblWatchDogVal.TabIndex = 10;
-            this.lblWatchDogVal.Text = "10s (Dog: 0)";
+            this.lblWatchDogVal.Size = new System.Drawing.Size(220, 16);
+            this.lblWatchDogVal.TabIndex = 12;
+            this.lblWatchDogVal.Text = "10s [待命中 (等待上位機連線...)]";
 
             // ================= grpRecipe =================
             this.grpRecipe.Controls.Add(this.lblLotInput);
@@ -594,6 +617,8 @@ namespace MitsubishiLaser.Simulator.Forms
         private System.Windows.Forms.Label lblStatusBadge;
         private System.Windows.Forms.Label lblModeBadge;
         private System.Windows.Forms.Label lblWatchDogTitle;
+        private System.Windows.Forms.CheckBox chkWatchDogEnable;
+        private System.Windows.Forms.Button btnFeedDog;
         private System.Windows.Forms.ProgressBar pbWatchDog;
         private System.Windows.Forms.Label lblWatchDogVal;
 

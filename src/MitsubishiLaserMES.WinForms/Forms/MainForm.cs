@@ -270,6 +270,12 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 SetResult(ok ? "PASS" : "FAIL", "0", ok ? "連續運轉啟動成功" : "連續運轉啟動失敗");
             };
 
+            btnOpenSimulator.Click += (s, e) =>
+            {
+                var simForm = new MitsubishiLaser.Simulator.Forms.SimulatorMainForm(MitsubishiLaserMES.Core.Simulator.LaserMachineSimulatorEngine.SharedInstance);
+                simForm.Show(this);
+            };
+
             // IT 測試按鈕
             btnTestAlive.Click += async (s, e) =>
             {

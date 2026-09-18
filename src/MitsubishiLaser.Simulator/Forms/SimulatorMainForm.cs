@@ -40,6 +40,7 @@ namespace MitsubishiLaser.Simulator.Forms
             }
 
             // 初始狀態刷新
+            chkWatchDogEnable.Checked = _simulator.IsWatchDogEnabled;
             RefreshDashboard();
         }
 
@@ -48,6 +49,17 @@ namespace MitsubishiLaser.Simulator.Forms
             // 監聽引擎事件
             _simulator.StateChanged += OnSimulatorStateChanged;
             _simulator.LogEmitted += OnSimulatorLogEmitted;
+
+            // WatchDog 控制
+            chkWatchDogEnable.CheckedChanged += (s, e) =>
+            {
+                _simulator.IsWatchDogEnabled = chkWatchDogEnable.Checked;
+                RefreshDashboard();
+            };
+            btnFeedDog.Click += (s, e) =>
+            {
+                _simulator.FeedWatchDog();
+            };
 
             // 批號刷卡
             btnInputLot.Click += (s, e) =>
@@ -191,9 +203,32 @@ namespace MitsubishiLaser.Simulator.Forms
             // 4. WatchDog 狀態
             int countdown = Math.Max(0, Math.Min(10, _simulator.WatchDogCountdownSec));
             pbWatchDog.Value = countdown;
-            lblWatchDogVal.Text = $"{countdown}s (Host: {_simulator.LastHostWatchDog})" +
-                                  (_simulator.IsWatchDogTimeout ? " [連線逾時異常!]" : "");
-            lblWatchDogVal.ForeColor = _simulator.IsWatchDogTimeout ? Color.Red : Color.Black;
+
+            if (!_simulator.IsWatchDogEnabled)
+            {
+                lblWatchDogVal.Text = "10s [心跳監控已停用]";
+                lblWatchDogVal.ForeColor = Color.DimGray;
+            }
+            else if (_simulator.OpcMode == MachineOperatingMode.Offline)
+            {
+                lblWatchDogVal.Text = "10s [離線不監控心跳]";
+                lblWatchDogVal.ForeColor = Color.DimGray;
+            }
+            else if (!_simulator.HasReceivedFirstHeartbeat)
+            {
+                lblWatchDogVal.Text = "10s [待命中 (等待上位機連線...)]";
+                lblWatchDogVal.ForeColor = Color.SteelBlue;
+            }
+            else if (_simulator.IsWatchDogTimeout)
+            {
+                lblWatchDogVal.Text = "0s [連線逾時異常!]";
+                lblWatchDogVal.ForeColor = Color.Red;
+            }
+            else
+            {
+                lblWatchDogVal.Text = $"{countdown}s (Host: {_simulator.LastHostWatchDog})";
+                lblWatchDogVal.ForeColor = Color.DarkGreen;
+            }
 
             // 5. 配方交握看板
             lblGetRecipeReq.Text = $"GetRecipe.Req: {(_simulator.GetRecipeRequest ? "TRUE (交握請求中)" : "False (閒置)")}";
