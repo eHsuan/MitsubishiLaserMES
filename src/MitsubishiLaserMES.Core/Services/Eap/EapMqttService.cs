@@ -15,6 +15,7 @@ using MitsubishiLaserMES.Core.Logging;
 using Protocol.Core.Base;
 using Protocol.Core.Messages;
 using Protocol.Core.Enums;
+using System.Reflection;
 
 namespace MitsubishiLaserMES.Core.Services.Eap
 {
@@ -235,6 +236,12 @@ namespace MitsubishiLaserMES.Core.Services.Eap
             where TReq : BaseMessage
             where TReply : ReplyBase, new()
         {
+            var mapping = reqPayload.GetType().GetCustomAttribute<CommandMappingAttribute>();
+            if (mapping != null)
+            {
+                reqPayload.CMD = mapping.Command;
+            }
+
             if (string.IsNullOrWhiteSpace(reqPayload.TransactionID))
             {
                 reqPayload.TransactionID = Guid.NewGuid().ToString();
@@ -293,6 +300,12 @@ namespace MitsubishiLaserMES.Core.Services.Eap
         public async Task<bool> PublishProtocolReportAsync<T>(T payload, bool bufferIfOffline = true)
             where T : BaseMessage
         {
+            var mapping = payload.GetType().GetCustomAttribute<CommandMappingAttribute>();
+            if (mapping != null)
+            {
+                payload.CMD = mapping.Command;
+            }
+
             if (string.IsNullOrWhiteSpace(payload.TransactionID))
             {
                 payload.TransactionID = Guid.NewGuid().ToString();

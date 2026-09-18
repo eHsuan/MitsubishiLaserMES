@@ -375,6 +375,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             var req = new TrackInReqMessage
             {
+                CMD = CommandType.TrackInReq,
                 WorkOrder = new List<string> { wo },
                 CassetteID = new List<string> { "C" + wo },
                 MaterialID = txtPartNo.Text.Trim(),

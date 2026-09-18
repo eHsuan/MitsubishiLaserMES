@@ -139,6 +139,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             {
                 req.UserID = CurrentOperatorId;
             }
+            req.CMD = CommandType.TrackInReq;
             req.Machine = _config.Mqtt?.EqID ?? string.Empty;
             if (string.IsNullOrWhiteSpace(req.Date))
             {
@@ -157,7 +158,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             var reply = await EapService.SendProtocolRequestAsync<TrackInReqMessage, ReplyTrackInReqMessage>(req, cancellationToken).ConfigureAwait(false);
 
-            if (reply.RtnResult == RtnResult.PASS)
+            if (reply.RtnResult == RtnResult.PASS && (reply.CMD == CommandType.ReplyTrackInReq || reply.CMD == CommandType.AlarmReport))
             {
                 string primaryWo = reply.WorkOrder != null && reply.WorkOrder.Count > 0 ? reply.WorkOrder[0] : (req.WorkOrder != null && req.WorkOrder.Count > 0 ? req.WorkOrder[0] : "");
                 string primaryCst = reply.CassetteID != null && reply.CassetteID.Count > 0 ? reply.CassetteID[0] : (req.CassetteID != null && req.CassetteID.Count > 0 ? req.CassetteID[0] : "");
@@ -227,6 +228,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             {
                 req.UserID = CurrentOperatorId;
             }
+            req.CMD = CommandType.TrackOutReq;
             req.Machine = _config.Mqtt?.EqID ?? string.Empty;
             if (string.IsNullOrWhiteSpace(req.Date))
             {
@@ -243,7 +245,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             var reply = await EapService.SendProtocolRequestAsync<TrackOutReqMessage, ReplyTrackOutReqMessage>(req, cancellationToken).ConfigureAwait(false);
 
-            if (reply.RtnResult == RtnResult.PASS)
+            if (reply.RtnResult == RtnResult.PASS && (reply.CMD == CommandType.ReplyTrackOutReq || reply.CMD == CommandType.AlarmReport))
             {
                 string primaryWo = req.WorkOrder?.FirstOrDefault() ?? (CurrentOrder?.WorkOrder ?? "");
                 _trackedInOrders.RemoveAll(o => o.WorkOrder == primaryWo);
