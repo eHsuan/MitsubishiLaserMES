@@ -376,8 +376,11 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                 string cmd = payloadObj["CMD"]?.ToString()?.Trim() ?? string.Empty;
                 string transactionId = payloadObj["TransactionID"]?.ToString()?.Trim() ?? string.Empty;
 
-                // 1. 若為等待中的 Reply
-                if (!string.IsNullOrEmpty(transactionId) && _pendingRequests.TryGetValue(transactionId, out var tcs))
+                // 1. 若明確為 Reply 類別且為等待中的請求 (避免將共用 TransactionID 之 RemoteCMD 等指令誤判為 Reply)
+                bool isReplyMessage = cmd.StartsWith("Reply", StringComparison.OrdinalIgnoreCase)
+                                   || string.Equals(cmd, "IamHere", StringComparison.OrdinalIgnoreCase);
+
+                if (isReplyMessage && !string.IsNullOrEmpty(transactionId) && _pendingRequests.TryGetValue(transactionId, out var tcs))
                 {
                     tcs.TrySetResult(payloadObj.ToString());
                     return Task.CompletedTask;
