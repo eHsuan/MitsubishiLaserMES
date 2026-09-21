@@ -43,5 +43,11 @@ namespace MitsubishiLaserMES.Core.Models.Eap
         {
             CMD = "ReplyEventReport";
         }
+
+        /// <summary>
+        /// EAP 回傳之人員工號 (即 RtnMsg / RtnMessage)
+        /// </summary>
+        [JsonIgnore]
+        public string EmployeeId => !string.IsNullOrWhiteSpace(RtnMsg) ? RtnMsg.Trim() : string.Empty;
     }
 }

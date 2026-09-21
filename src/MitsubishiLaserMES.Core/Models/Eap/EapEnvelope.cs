@@ -52,8 +52,30 @@ namespace MitsubishiLaserMES.Core.Models.Eap
         [JsonProperty("RtnResult")]
         public string RtnResult { get; set; } = "PASS"; // PASS / FAIL
 
+        private string _rtnMsg = string.Empty;
+
         [JsonProperty("RtnMsg")]
-        public string RtnMsg { get; set; } = string.Empty;
+        public string RtnMsg
+        {
+            get => _rtnMsg;
+            set => _rtnMsg = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// 相容 EAP 可能回傳之 RtnMessage / rtnmessage 欄位命名
+        /// </summary>
+        [JsonProperty("RtnMessage")]
+        public string RtnMessage
+        {
+            get => _rtnMsg;
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _rtnMsg = value;
+                }
+            }
+        }
 
         [JsonIgnore]
         public bool IsPass => string.Equals(RtnResult, "PASS", StringComparison.OrdinalIgnoreCase);

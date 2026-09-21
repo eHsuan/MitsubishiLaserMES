@@ -110,11 +110,13 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             var reply = await EapService.SendRequestAsync<UserVerifyReqPayload, UserVerifyReplyPayload>(req, cancellationToken).ConfigureAwait(false);
             if (reply.IsPass)
             {
-                CurrentOperatorId = userBarcode;
-                CurrentOperatorName = string.IsNullOrWhiteSpace(reply.RtnMsg) ? userBarcode : reply.RtnMsg;
+                // EAP 回傳的 rtnmessage 即為人員工號，直接擷取
+                string employeeId = !string.IsNullOrWhiteSpace(reply.EmployeeId) ? reply.EmployeeId : userBarcode.Trim();
+                CurrentOperatorId = employeeId;
+                CurrentOperatorName = employeeId;
                 OperatorLoggedIn?.Invoke(CurrentOperatorId, CurrentOperatorName);
-                _logger.Info("UserVerify", $"人員登入成功，工號: {CurrentOperatorId}, 姓名: {CurrentOperatorName}");
-                SystemLogMessage?.Invoke($"[人員登入成功] 工號: {CurrentOperatorId}, 姓名: {CurrentOperatorName}");
+                _logger.Info("UserVerify", $"人員登入成功，工號: {CurrentOperatorId}");
+                SystemLogMessage?.Invoke($"[人員登入成功] 工號: {CurrentOperatorId}");
             }
             else
             {

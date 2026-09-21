@@ -53,7 +53,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 txtCurrentOpId.Text = id;
                 txtCurrentOpName.Text = name;
                 txtBarcode.Clear();
-                SetResult("PASS", "200", $"人員 {name} ({id}) 登入驗證成功。");
+                SetResult("PASS", "200", $"人員工號 {id} 登入驗證成功。");
             });
 
             _coordinator.OperatorLoggedOut += () => SafeInvoke(() =>
