@@ -163,8 +163,8 @@ namespace MitsubishiLaserMES.Core.Services.Eap
 
                 await PublishRawAsync(_settings.ReportTopic, json, cancellationToken).ConfigureAwait(false);
 
-                // 設定 T1 逾時時間
-                int timeoutMs = _settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 30000;
+                // 設定 T1 逾時時間 (預設 45 秒)
+                int timeoutMs = _settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 45000;
                 using var timeoutCts = new CancellationTokenSource(timeoutMs);
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -176,7 +176,8 @@ namespace MitsubishiLaserMES.Core.Services.Eap
             }
             catch (OperationCanceledException)
             {
-                LogMessage?.Invoke($"[EAP 逾時] CMD: {reqPayload.CMD} 等待 EAP 回覆超過 T1 ({_settings.TimeoutT1Ms / 1000}s) 逾時。");
+                int timeoutSec = (_settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 45000) / 1000;
+                LogMessage?.Invoke($"[EAP 逾時] CMD: {reqPayload.CMD} 等待 EAP 回覆超過 {timeoutSec}s 逾時。");
                 return new TReply
                 {
                     TransactionID = reqPayload.TransactionID,
@@ -270,8 +271,8 @@ namespace MitsubishiLaserMES.Core.Services.Eap
 
                 await PublishRawAsync(_settings.ReportTopic, json, cancellationToken).ConfigureAwait(false);
 
-                // 設定 T1 逾時時間
-                int timeoutMs = _settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 30000;
+                // 設定 T1 逾時時間 (預設 45 秒)
+                int timeoutMs = _settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 45000;
                 using var timeoutCts = new CancellationTokenSource(timeoutMs);
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -283,7 +284,8 @@ namespace MitsubishiLaserMES.Core.Services.Eap
             }
             catch (OperationCanceledException)
             {
-                LogMessage?.Invoke($"[EAP 逾時] CMD: {reqPayload.CMD} 等待 EAP 回覆超過 T1 ({_settings.TimeoutT1Ms / 1000}s) 逾時。");
+                int timeoutSec = (_settings.TimeoutT1Ms > 0 ? _settings.TimeoutT1Ms : 45000) / 1000;
+                LogMessage?.Invoke($"[EAP 逾時] CMD: {reqPayload.CMD} 等待 EAP 回覆超過 {timeoutSec}s 逾時。");
                 return new TReply
                 {
                     TransactionID = reqPayload.TransactionID,

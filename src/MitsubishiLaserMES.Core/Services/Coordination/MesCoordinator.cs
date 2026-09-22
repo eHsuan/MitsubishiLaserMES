@@ -87,6 +87,17 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         public async Task<UserVerifyReplyPayload> LoginWithBarcodeAsync(string userBarcode, CancellationToken cancellationToken = default)
         {
+            if (!EapService.IsAliveGreen)
+            {
+                _logger.Warn("UserVerify", "EAP 未連線 (非綠燈狀態)，無法進行人員登入。");
+                SystemLogMessage?.Invoke("[人員驗證失敗] EAP 未連線。");
+                return new UserVerifyReplyPayload
+                {
+                    RtnResult = "FAIL",
+                    RtnMsg = "EAP未連線"
+                };
+            }
+
             if (string.IsNullOrWhiteSpace(userBarcode))
             {
                 return new UserVerifyReplyPayload { RtnResult = "FAIL", RtnMsg = "請輸入或掃描人員二維條碼" };
@@ -137,6 +148,18 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         public async Task<ReplyTrackInReqMessage> TrackInAsync(TrackInReqMessage req, CancellationToken cancellationToken = default)
         {
+            if (!EapService.IsAliveGreen)
+            {
+                _logger.Warn("TrackIn", "EAP 未連線 (非綠燈狀態)，無法進行工單進站。");
+                SystemLogMessage?.Invoke("[工單進站失敗] EAP 未連線。");
+                return new ReplyTrackInReqMessage
+                {
+                    CMD = CommandType.ReplyTrackInReq,
+                    RtnResult = RtnResult.FAIL,
+                    RtnMsg = "EAP未連線"
+                };
+            }
+
             if (string.IsNullOrWhiteSpace(req.UserID))
             {
                 req.UserID = CurrentOperatorId;
@@ -251,6 +274,18 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         public async Task<ReplyTrackOutReqMessage> TrackOutAsync(TrackOutReqMessage req, CancellationToken cancellationToken = default)
         {
+            if (!EapService.IsAliveGreen)
+            {
+                _logger.Warn("TrackOut", "EAP 未連線 (非綠燈狀態)，無法進行工單出站。");
+                SystemLogMessage?.Invoke("[工單出站失敗] EAP 未連線。");
+                return new ReplyTrackOutReqMessage
+                {
+                    CMD = CommandType.ReplyTrackOutReq,
+                    RtnResult = RtnResult.FAIL,
+                    RtnMsg = "EAP未連線"
+                };
+            }
+
             if (string.IsNullOrWhiteSpace(req.UserID))
             {
                 req.UserID = CurrentOperatorId;

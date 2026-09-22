@@ -17,8 +17,8 @@ namespace MitsubishiLaserMES.Core.Models.Config
         public string Area { get; set; } = "Yellow";
         public string EqID { get; set; } = "PL001";
 
-        // 逾時設定 (毫秒，預設 30 秒)
-        public int TimeoutT1Ms { get; set; } = 30000;
+        // 逾時設定 (毫秒，預設 45 秒)
+        public int TimeoutT1Ms { get; set; } = 45000;
 
         // 心跳間隔 (秒，預設 30 秒)
         public int AliveCheckIntervalSec { get; set; } = 30;

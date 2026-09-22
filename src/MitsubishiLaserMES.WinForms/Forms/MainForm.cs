@@ -303,6 +303,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             btnTestProcessData.Click += async (s, e) =>
             {
+                if (!EnsureEapConnected()) return;
+
                 var report = new ProcessDataReportPayload
                 {
                     Machine = _config.Mqtt.EqID,
@@ -323,6 +325,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             btnTestAlarmStart.Click += async (s, e) =>
             {
+                if (!EnsureEapConnected()) return;
+
                 var alarm = new AlarmReportPayload
                 {
                     Machine = _config.Mqtt.EqID,
@@ -337,6 +341,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             btnTestAlarmEnd.Click += async (s, e) =>
             {
+                if (!EnsureEapConnected()) return;
+
                 var alarm = new AlarmReportPayload
                 {
                     Machine = _config.Mqtt.EqID,
@@ -354,6 +360,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private async Task DoUserAuthAsync()
         {
+            if (!EnsureEapConnected()) return;
+
             string barcode = txtBarcode.Text.Trim();
             if (string.IsNullOrWhiteSpace(barcode))
             {
@@ -381,6 +389,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private async Task DoTrackInAsync()
         {
+            if (!EnsureEapConnected()) return;
+
             if (!_coordinator.IsOperatorLoggedIn)
             {
                 MessageBox.Show(this, "請先執行作業員認證登入，再進行工單進站！", "權限提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -422,6 +432,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private async Task DoTrackOutAsync()
         {
+            if (!EnsureEapConnected()) return;
+
             if (!_coordinator.IsTrackedIn && string.IsNullOrWhiteSpace(txtWorkOrder.Text))
             {
                 MessageBox.Show(this, "當前無進行中或進站中之工單！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -535,6 +547,16 @@ namespace MitsubishiLaserMES.WinForms.Forms
             {
                 pnlMqttLed.BackColor = Color.Gold;
             }
+        }
+
+        private bool EnsureEapConnected()
+        {
+            if (!_coordinator.EapService.IsAliveGreen)
+            {
+                MessageBox.Show(this, "EAP未連線，無法執行此操作！請確認 EAP 連線狀態（燈號必須為綠燈）。", "連線提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
         }
 
         private void UpdateStatusLamps(MachineStatusLight light)
