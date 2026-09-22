@@ -354,7 +354,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         private void OnOpcAlarmTriggered(string code, string msg, bool isStart)
         {
-            if (string.IsNullOrWhiteSpace(msg))
+            if (string.IsNullOrWhiteSpace(msg) || msg == "警報解除")
             {
                 msg = _config.Profile?.GetAlarmMessage(code, "未定義警報");
             }

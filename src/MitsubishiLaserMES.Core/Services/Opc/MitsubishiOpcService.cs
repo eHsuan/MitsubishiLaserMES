@@ -24,7 +24,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
         private CancellationTokenSource _pollCts;
         private Task _pollTask;
-        private readonly HashSet<string> _activeAlarms = new HashSet<string>();
+        private readonly Dictionary<string, string> _activeAlarms = new Dictionary<string, string>();
 
         public bool IsConnected { get; private set; }
         public bool IsVirtual => _settings.UseVirtualSimulator;
@@ -375,7 +375,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
                         string codeStr = no.ToString("D4");
                         currentPollAlarms.Add(codeStr);
 
-                        if (!_activeAlarms.Contains(codeStr))
+                        if (!_activeAlarms.ContainsKey(codeStr))
                         {
                             // 讀取警報訊息
                             var msgDesc = new NodeDescriptor(
@@ -387,7 +387,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
                             var readMsg = await _client.ReadAsync(msgDesc, token).ConfigureAwait(false);
                             string msgStr = readMsg.Value?.ToString() ?? "機台異常";
 
-                            _activeAlarms.Add(codeStr);
+                            _activeAlarms[codeStr] = msgStr;
                             AlarmTriggered?.Invoke(codeStr, msgStr, true);
                         }
                     }
@@ -395,11 +395,12 @@ namespace MitsubishiLaserMES.Core.Services.Opc
             }
 
             // 檢查復歸 (原本在 _activeAlarms 但不在 currentPollAlarms)
-            var resolved = _activeAlarms.Where(a => !currentPollAlarms.Contains(a)).ToList();
+            var resolved = _activeAlarms.Keys.Where(a => !currentPollAlarms.Contains(a)).ToList();
             foreach (var code in resolved)
             {
+                string originalMsg = _activeAlarms.TryGetValue(code, out var m) ? m : string.Empty;
                 _activeAlarms.Remove(code);
-                AlarmTriggered?.Invoke(code, "警報解除", false);
+                AlarmTriggered?.Invoke(code, originalMsg, false);
             }
         }
 

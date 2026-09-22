@@ -342,7 +342,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
                     Machine = _config.Mqtt.EqID,
                     AlarmStatus = "End",
                     AlarmCode = "ERR001",
-                    AlarmMsg = "雷射發振器異常解除",
+                    AlarmMsg = "雷射發振器異常",
                     AlarmType = "A"
                 };
                 await _coordinator.EapService.PublishReportAsync(alarm);
