@@ -142,6 +142,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 lblOpcConn.ForeColor = conn ? Color.DarkGreen : Color.DarkRed;
             });
 
+            _coordinator.OpcService.OpcModeChanged += mode => SafeInvoke(() =>
+            {
+                UpdateModeButtons(mode);
+            });
+
             _coordinator.OpcService.StatusLightChanged += (oldL, newL) => SafeInvoke(() =>
             {
                 UpdateStatusLamps(newL);
@@ -261,9 +266,21 @@ namespace MitsubishiLaserMES.WinForms.Forms
             };
 
             // 設備功能按鈕
-            btnModeLocal.Click += async (s, e) => await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineLocal);
-            btnModeSemiAuto.Click += async (s, e) => await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineSemiAuto);
-            btnModeAuto.Click += async (s, e) => await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineAuto);
+            btnModeLocal.Click += async (s, e) =>
+            {
+                bool ok = await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineLocal);
+                SetResult(ok ? "PASS" : "FAIL", "0", ok ? "已請求切換為 Local 模式" : "模式切換失敗 (機台非 Idle 或通訊異常)");
+            };
+            btnModeSemiAuto.Click += async (s, e) =>
+            {
+                bool ok = await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineSemiAuto);
+                SetResult(ok ? "PASS" : "FAIL", "0", ok ? "已請求切換為 Semi-Auto 模式" : "模式切換失敗 (機台非 Idle 或通訊異常)");
+            };
+            btnModeAuto.Click += async (s, e) =>
+            {
+                bool ok = await _coordinator.SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineAuto);
+                SetResult(ok ? "PASS" : "FAIL", "0", ok ? "已請求切換為 Auto 模式" : "模式切換失敗 (機台非 Idle 或通訊異常)");
+            };
             btnStartSchedule.Click += async (s, e) =>
             {
                 bool ok = await _coordinator.OpcService.StartScheduleAsync();
@@ -542,6 +559,13 @@ namespace MitsubishiLaserMES.WinForms.Forms
             }
 
             lblMachineState.Text = $"機台狀態代碼: [{(int)light}] {light}";
+        }
+
+        private void UpdateModeButtons(MitsubishiOpcMode mode)
+        {
+            btnModeLocal.BackColor = (mode == MitsubishiOpcMode.OnlineLocal) ? Color.PaleTurquoise : SystemColors.Control;
+            btnModeSemiAuto.BackColor = (mode == MitsubishiOpcMode.OnlineSemiAuto) ? Color.PaleTurquoise : SystemColors.Control;
+            btnModeAuto.BackColor = (mode == MitsubishiOpcMode.OnlineAuto) ? Color.PaleTurquoise : SystemColors.Control;
         }
 
         private void AddMqttLog(string direction, string topic, string payload)

@@ -44,6 +44,7 @@ namespace MitsubishiLaserMES.Core.Simulator
         public short RequestedSheetNum { get; private set; } = -1;
         public short GetRecipeAck { get; private set; } = 0;
         public short ChangeOpcModeAck { get; private set; } = 0;
+        public short RequestedOpcMode { get; private set; } = (short)MachineOperatingMode.OnlineAuto;
 
         // 運轉進行中資料
         public string ActiveLotId { get; private set; } = string.Empty;
@@ -333,6 +334,9 @@ namespace MitsubishiLaserMES.Core.Simulator
                     case LaserOpcNode.ChangeOpcModeAck:
                         return ChangeOpcModeAck;
 
+                    case LaserOpcNode.RequestedOpcMode:
+                        return RequestedOpcMode;
+
                     case LaserOpcNode.ActiveLotId:
                         return ActiveLotId;
 
@@ -398,6 +402,8 @@ namespace MitsubishiLaserMES.Core.Simulator
 
                     // 2. 模式切換請求
                     case LaserOpcNode.RequestedOpcMode:
+                        RequestedOpcMode = Convert.ToInt16(value);
+                        Log($"[上位機設定目標模式] 目標 OPC 模式: {RequestedOpcMode} ({(MachineOperatingMode)RequestedOpcMode})");
                         return true;
 
                     case LaserOpcNode.ChangeOpcModeRequest:
@@ -407,8 +413,12 @@ namespace MitsubishiLaserMES.Core.Simulator
                             // 原廠 4-1 規範：只有在機台待機 (3: Idle) 時才可以切換模式！
                             if (StatusCode == MachineStatus.Idle)
                             {
+                                if (Enum.IsDefined(typeof(MachineOperatingMode), RequestedOpcMode))
+                                {
+                                    SetOperatingMode((MachineOperatingMode)RequestedOpcMode);
+                                }
                                 ChangeOpcModeAck = 1;
-                                Log($"[模式切換成功] 上位機要求切換模式，機台確認待機中 (Idle)，Ack = 1。");
+                                Log($"[模式切換成功] 上位機要求切換模式為 {OpcMode}，機台確認待機中 (Idle)，Ack = 1。");
                             }
                             else
                             {

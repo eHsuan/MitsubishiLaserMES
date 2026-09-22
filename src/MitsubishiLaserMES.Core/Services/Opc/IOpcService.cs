@@ -15,8 +15,10 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         int ScheduledCount { get; }
         string ActiveLotId { get; }
         string ActiveProgramFile { get; }
+        MitsubishiOpcMode CurrentOpcMode { get; }
 
         event Action<bool> ConnectionStateChanged;
+        event Action<MitsubishiOpcMode> OpcModeChanged;
         event Action<MachineStatusLight, MachineStatusLight> StatusLightChanged;
         event Action<int, int> ProcessedCountChanged; // oldVal, newVal
         event Action<string, string, bool> AlarmTriggered; // code, msg, isStart

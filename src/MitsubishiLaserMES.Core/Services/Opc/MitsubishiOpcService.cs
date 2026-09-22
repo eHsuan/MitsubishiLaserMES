@@ -34,8 +34,10 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         public int ScheduledCount { get; private set; } = 0;
         public string ActiveLotId { get; private set; } = string.Empty;
         public string ActiveProgramFile { get; private set; } = string.Empty;
+        public MitsubishiOpcMode CurrentOpcMode { get; private set; } = MitsubishiOpcMode.Offline;
 
         public event Action<bool> ConnectionStateChanged;
+        public event Action<MitsubishiOpcMode> OpcModeChanged;
         public event Action<MachineStatusLight, MachineStatusLight> StatusLightChanged;
         public event Action<int, int> ProcessedCountChanged;
         public event Action<string, string, bool> AlarmTriggered;
@@ -188,6 +190,26 @@ namespace MitsubishiLaserMES.Core.Services.Opc
             {
                 await _diagnosticService.WriteAsync(LaserOpcNode.RequestedOpcMode, mode, cancellationToken).ConfigureAwait(false);
                 var ack = await _diagnosticService.WriteAsync(LaserOpcNode.ChangeOpcModeRequest, true, cancellationToken).ConfigureAwait(false);
+                if (ack.Succeeded)
+                {
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                    var modeRes = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.MachineOpcMode), cancellationToken).ConfigureAwait(false);
+                    if (modeRes.Succeeded && modeRes.Value != null)
+                    {
+                        short modeVal = Convert.ToInt16(modeRes.Value);
+                        if (Enum.IsDefined(typeof(MitsubishiOpcMode), (int)modeVal))
+                        {
+                            var newMode = (MitsubishiOpcMode)modeVal;
+                            if (newMode != CurrentOpcMode)
+                            {
+                                CurrentOpcMode = newMode;
+                                OpcModeChanged?.Invoke(newMode);
+                            }
+                        }
+                    }
+                    // 復歸 ChangeOpcModeRequest
+                    await _diagnosticService.WriteAsync(LaserOpcNode.ChangeOpcModeRequest, false, cancellationToken).ConfigureAwait(false);
+                }
                 return ack.Succeeded;
             }
             catch (Exception ex)
@@ -228,6 +250,22 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         private async Task PollMachineStateAsync(CancellationToken token)
         {
             if (_client == null || !IsConnected) return;
+
+            // 0. 讀取機台 OPC 模式
+            var modeRes = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.MachineOpcMode), token).ConfigureAwait(false);
+            if (modeRes.Succeeded && modeRes.Value != null)
+            {
+                short modeVal = Convert.ToInt16(modeRes.Value);
+                if (Enum.IsDefined(typeof(MitsubishiOpcMode), (int)modeVal))
+                {
+                    var newMode = (MitsubishiOpcMode)modeVal;
+                    if (newMode != CurrentOpcMode)
+                    {
+                        CurrentOpcMode = newMode;
+                        OpcModeChanged?.Invoke(newMode);
+                    }
+                }
+            }
 
             // 1. 讀取狀態碼
             var statusRes = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.MachineStatusCode), token).ConfigureAwait(false);

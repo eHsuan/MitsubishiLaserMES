@@ -187,14 +187,29 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}");
                 SystemLogMessage?.Invoke($"[工單進站成功] 工單={primaryWo}, 卡匣={primaryCst}");
 
-                // 進站成功後通知機台啟動連續加工運轉
+                // 進站成功後依機台 OPC 模式決定是否自動啟動連續加工運轉
                 if (OpcService.IsConnected)
                 {
-                    _ = Task.Run(async () =>
+                    if (OpcService.CurrentOpcMode == MitsubishiOpcMode.OnlineAuto)
                     {
-                        await Task.Delay(300).ConfigureAwait(false);
-                        await OpcService.StartScheduleAsync().ConfigureAwait(false);
-                    });
+                        _logger.Info("TrackIn", $"目前機台為全自動模式 (OnlineAuto)，進站成功後自動啟動連續加工運轉。");
+                        SystemLogMessage?.Invoke($"[工單進站成功] 機台為全自動模式 (Auto)，準備自動下發啟動運轉命令...");
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(300).ConfigureAwait(false);
+                            await OpcService.StartScheduleAsync().ConfigureAwait(false);
+                        });
+                    }
+                    else if (OpcService.CurrentOpcMode == MitsubishiOpcMode.OnlineSemiAuto)
+                    {
+                        _logger.Info("TrackIn", $"目前機台為半自動模式 (OnlineSemiAuto)，進站成功後不自動啟動，等待作業員於機台端按下啟動按鈕。");
+                        SystemLogMessage?.Invoke($"[工單進站成功] 目前為半自動模式 (Semi-Auto)，配方已就緒，請作業員於機台端手動按下啟動按鈕。");
+                    }
+                    else
+                    {
+                        _logger.Info("TrackIn", $"目前機台 OPC 模式為 {OpcService.CurrentOpcMode}，不自動發送啟動命令。");
+                        SystemLogMessage?.Invoke($"[工單進站成功] 目前機台模式為 {OpcService.CurrentOpcMode}，不自動啟動加工。");
+                    }
                 }
             }
             else
