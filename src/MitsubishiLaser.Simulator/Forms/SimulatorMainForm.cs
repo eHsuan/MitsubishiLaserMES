@@ -77,15 +77,15 @@ namespace MitsubishiLaser.Simulator.Forms
             };
 
             // 運轉控制
-            btnStartRun.Click += (s, e) => _simulator.StartSchedule();
-            btnStopRun.Click += (s, e) => _simulator.StopSchedule();
-            btnSimFailTarget.Click += (s, e) => _simulator.SimulateTargetFailure();
+            btnStartRun.Click += (s, e) => Task.Run(() => _simulator.StartSchedule());
+            btnStopRun.Click += (s, e) => Task.Run(() => _simulator.StopSchedule());
+            btnSimFailTarget.Click += (s, e) => Task.Run(() => _simulator.SimulateTargetFailure());
 
             // 模式切換
-            btnSetOffline.Click += (s, e) => _simulator.SetOperatingMode(MachineOperatingMode.Offline);
-            btnSetLocal.Click += (s, e) => _simulator.SetOperatingMode(MachineOperatingMode.OnlineLocal);
-            btnSetSemiAuto.Click += (s, e) => _simulator.SetOperatingMode(MachineOperatingMode.OnlineSemiAuto);
-            btnSetAuto.Click += (s, e) => _simulator.SetOperatingMode(MachineOperatingMode.OnlineAuto);
+            btnSetOffline.Click += (s, e) => Task.Run(() => _simulator.SetOperatingMode(MachineOperatingMode.Offline));
+            btnSetLocal.Click += (s, e) => Task.Run(() => _simulator.SetOperatingMode(MachineOperatingMode.OnlineLocal));
+            btnSetSemiAuto.Click += (s, e) => Task.Run(() => _simulator.SetOperatingMode(MachineOperatingMode.OnlineSemiAuto));
+            btnSetAuto.Click += (s, e) => Task.Run(() => _simulator.SetOperatingMode(MachineOperatingMode.OnlineAuto));
 
             // 警報觸發
             btnTriggerAlarm.Click += (s, e) =>

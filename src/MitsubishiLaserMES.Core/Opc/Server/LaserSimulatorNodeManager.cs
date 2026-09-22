@@ -90,21 +90,40 @@ namespace MitsubishiLaserMES.Core.Opc.Server
 
         private void OnSimulatorStateChanged()
         {
-            lock (Lock)
+            // 透過 ThreadPool 非同步執行，絕不阻塞觸發事件的執行緒
+            ThreadPool.QueueUserWorkItem(_ =>
             {
-                foreach (var desc in LaserOpcNodeCatalog.All)
+                try
                 {
-                    if (_variables.TryGetValue(desc.SpecTag, out var variable))
+                    // 階段一：在不持有 OPC Lock 的情況下，先由模擬器讀取節點值快照 (避免與伺服器 Lock 發生死鎖)
+                    var snapshots = new List<(string tag, object val)>();
+                    foreach (var desc in LaserOpcNodeCatalog.All)
                     {
                         object val = _simulator.HandleHostRead(desc);
-                        if (val != null && !Equals(variable.Value, val))
+                        if (val != null)
                         {
-                            variable.Value = val;
-                            variable.ClearChangeMasks(SystemContext, false);
+                            snapshots.Add((desc.SpecTag, val));
+                        }
+                    }
+
+                    // 階段二：獨立獲取 OPC Server Lock，批次更新節點數值 (此時已不持有模擬器 _lock)
+                    lock (Lock)
+                    {
+                        foreach (var (tag, val) in snapshots)
+                        {
+                            if (_variables.TryGetValue(tag, out var variable))
+                            {
+                                if (!Equals(variable.Value, val))
+                                {
+                                    variable.Value = val;
+                                    variable.ClearChangeMasks(SystemContext, false);
+                                }
+                            }
                         }
                     }
                 }
-            }
+                catch { }
+            });
         }
 
         private static NodeId MapDataType(OpcValueType valueType)

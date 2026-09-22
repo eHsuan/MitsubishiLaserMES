@@ -214,13 +214,28 @@ namespace MitsubishiLaserMES.Core.Simulator
 
                 if (string.IsNullOrEmpty(ActiveProgramFile))
                 {
-                    Log("[啟動失敗] 尚未載入加工程式，無法啟動加工。");
-                    return false;
+                    // 若尚未由上位機載入配方，設定預設範例加工程式與批號以便手動測試
+                    ActiveProgramFile = "PRG_SAMPLE_001.NC";
+                    ActiveConditionFile = "CND_SAMPLE_001.DAT";
+                    if (string.IsNullOrEmpty(ActiveLotId))
+                    {
+                        ActiveLotId = "LOT-" + DateTime.Now.ToString("MMdd-HHmm");
+                    }
+                    if (ScheduledCount <= 0)
+                    {
+                        ScheduledCount = 10;
+                    }
+                }
+
+                // 若上一批已加工完成，重新開始時自動重設計數
+                if (ProcessedCount >= ScheduledCount)
+                {
+                    ProcessedCount = 0;
+                    UnProcessedCount = 0;
                 }
 
                 SetMachineStatus(MachineStatus.Running);
                 Log($"[機台啟動] 開始連續運轉加工，批號: {ActiveLotId}，加工程式: {ActiveProgramFile}，排程片數: {ScheduledCount}");
-                NotifyStateChanged();
                 return true;
             }
         }
@@ -231,7 +246,6 @@ namespace MitsubishiLaserMES.Core.Simulator
             {
                 SetMachineStatus(MachineStatus.Idle);
                 Log("[機台停止] 操作員或上位機停止連續運轉加工。");
-                NotifyStateChanged();
             }
         }
 
@@ -564,12 +578,14 @@ namespace MitsubishiLaserMES.Core.Simulator
                         if (ProcessedCount >= ScheduledCount)
                         {
                             Log($"[批次加工完成] 批號 {ActiveLotId} 已全數加工完畢！機台轉入 Idle。");
-                            SetMachineStatus(MachineStatus.Idle);
+                            StatusCode = MachineStatus.Idle;
+                            UpdateLamps();
                         }
                     }
                     else
                     {
-                        SetMachineStatus(MachineStatus.Idle);
+                        StatusCode = MachineStatus.Idle;
+                        UpdateLamps();
                     }
 
                     NotifyStateChanged();
@@ -607,12 +623,26 @@ namespace MitsubishiLaserMES.Core.Simulator
 
         private void Log(string message)
         {
-            LogEmitted?.Invoke(message);
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    LogEmitted?.Invoke(message);
+                }
+                catch { }
+            });
         }
 
         private void NotifyStateChanged()
         {
-            StateChanged?.Invoke();
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    StateChanged?.Invoke();
+                }
+                catch { }
+            });
         }
 
         public void Dispose()
