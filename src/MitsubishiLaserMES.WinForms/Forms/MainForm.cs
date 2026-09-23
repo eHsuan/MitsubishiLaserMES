@@ -42,6 +42,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             BindCoordinatorEvents();
             BindFormEvents();
             InitSampleData();
+            RestoreTrackedInOrders();
             UpdateEapLed();
         }
 
@@ -86,18 +87,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
             // 工單出站成功
             _coordinator.TrackOutCompleted += wo => SafeInvoke(() =>
             {
-                for (int i = dgvTrackedIn.Rows.Count - 1; i >= 0; i--)
-                {
-                    if (dgvTrackedIn.Rows[i].Cells[0].Value?.ToString() == wo)
-                    {
-                        dgvTrackedIn.Rows.RemoveAt(i);
-                    }
-                }
-                txtIsTrackedIn.Text = "未進站";
-                txtIsTrackedIn.ForeColor = Color.Black;
-                btnTrackIn.Enabled = true;
-                btnTrackOut.Enabled = false;
+                RestoreTrackedInOrders();
                 SetResult("PASS", "200", $"工單 {wo} 出站過帳成功。");
+            });
+
+            // 工單手動移除成功 (防呆解卡死)
+            _coordinator.TrackInRemoved += wo => SafeInvoke(() =>
+            {
+                RestoreTrackedInOrders();
+                SetResult("INFO", "0", $"已自本機清單手動強制移除工單 {wo}。");
             });
 
             // EAP 終端訊息
@@ -243,6 +241,16 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 txtBarcode.Focus();
             };
             btnClearOrder.Click += (s, e) => ClearOrderInputs();
+            btnRemoveTrackedIn.Click += (s, e) => DoRemoveSelectedTrackedInOrder();
+            tsmiRemoveTrackedIn.Click += (s, e) => DoRemoveSelectedTrackedInOrder();
+            dgvTrackedIn.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Delete)
+                {
+                    e.SuppressKeyPress = true;
+                    DoRemoveSelectedTrackedInOrder();
+                }
+            };
 
 
             // 設備功能按鈕
@@ -482,6 +490,80 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtIsTrackedIn.Text = "未進站";
         }
 
+        private void DoRemoveSelectedTrackedInOrder()
+        {
+            if (dgvTrackedIn.SelectedRows.Count == 0 && dgvTrackedIn.CurrentRow == null)
+            {
+                MessageBox.Show(this, "請先在「已進站工單清單」中選取要移除的工單！", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var selectedRow = dgvTrackedIn.SelectedRows.Count > 0 ? dgvTrackedIn.SelectedRows[0] : dgvTrackedIn.CurrentRow;
+            string workOrder = selectedRow?.Cells[0].Value?.ToString()?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(workOrder))
+            {
+                MessageBox.Show(this, "選取的工單號碼無效！", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var dr = MessageBox.Show(this,
+                $"確定要強制自本機移除已進站工單【{workOrder}】嗎？\n\n注意：此操作將自本機清單清除進站狀態以防卡死。\n若機台正在加工中，請務必先確認機台狀況以避免帳料不一致！",
+                "強制解除進站確認",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
+
+            if (dr == DialogResult.Yes)
+            {
+                bool ok = _coordinator.RemoveTrackedInOrder(workOrder);
+                if (ok)
+                {
+                    RestoreTrackedInOrders();
+                    MessageBox.Show(this, $"已成功移除工單【{workOrder}】之進站狀態！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this, $"移除工單【{workOrder}】失敗，該工單可能已不在清單中。", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void RestoreTrackedInOrders()
+        {
+            dgvTrackedIn.Rows.Clear();
+            if (_coordinator.TrackedInOrders != null && _coordinator.TrackedInOrders.Count > 0)
+            {
+                foreach (var order in _coordinator.TrackedInOrders)
+                {
+                    dgvTrackedIn.Rows.Add(order.WorkOrder, order.CassetteId);
+                }
+
+                var current = _coordinator.CurrentOrder ?? _coordinator.TrackedInOrders[_coordinator.TrackedInOrders.Count - 1];
+                if (current != null)
+                {
+                    txtWorkOrder.Text = current.WorkOrder;
+                    txtBatchNo.Text = current.WorkOrder;
+                    if (!string.IsNullOrWhiteSpace(current.PartNo)) txtPartNo.Text = current.PartNo;
+                    if (!string.IsNullOrWhiteSpace(current.ProcessNo)) txtProcessNo.Text = current.ProcessNo;
+                    if (!string.IsNullOrWhiteSpace(current.ProcessName)) txtProcessName.Text = current.ProcessName;
+                    if (current.TotalQty > 0) txtTotalQty.Text = current.TotalQty.ToString();
+                    if (!string.IsNullOrWhiteSpace(current.RecipeId)) txtRecipeId.Text = current.RecipeId;
+                }
+
+                txtIsTrackedIn.Text = "已進站";
+                txtIsTrackedIn.ForeColor = Color.DarkGreen;
+                btnTrackIn.Enabled = false;
+                btnTrackOut.Enabled = true;
+            }
+            else
+            {
+                txtIsTrackedIn.Text = "未進站";
+                txtIsTrackedIn.ForeColor = Color.Black;
+                btnTrackIn.Enabled = true;
+                btnTrackOut.Enabled = false;
+            }
+        }
+
         private void UpdateEapLed()
         {
             if (!_coordinator.EapService.IsConnected)
@@ -586,6 +668,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 btnTrackOut.Text = "Track Out";
                 btnChangeUser.Text = "Switch User";
                 btnClearOrder.Text = "Clear";
+                btnRemoveTrackedIn.Text = "Remove Order";
+                tsmiRemoveTrackedIn.Text = "Force Remove Order (Untrack)";
+                grpTrackedInList.Text = "Tracked-in Orders";
             }
             else
             {
@@ -602,6 +687,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 btnTrackOut.Text = "工單出站";
                 btnChangeUser.Text = "更換人員";
                 btnClearOrder.Text = "清除";
+                btnRemoveTrackedIn.Text = "移除選取工單";
+                tsmiRemoveTrackedIn.Text = "強制移除此工單(解除進站)";
+                grpTrackedInList.Text = "已進站工單清單";
             }
         }
 

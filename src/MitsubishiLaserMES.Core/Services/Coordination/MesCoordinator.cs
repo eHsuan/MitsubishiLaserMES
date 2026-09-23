@@ -19,6 +19,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
     {
         private readonly AppConfig _config;
         private readonly ILogService _logger;
+        private readonly TrackedOrderStorageService _storageService;
         private readonly List<TrackedInOrderInfo> _trackedInOrders = new List<TrackedInOrderInfo>();
 
         public IEapMqttService EapService { get; }
@@ -35,13 +36,15 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         public event Action OperatorLoggedOut;
         public event Action<TrackedInOrderInfo> TrackInCompleted;
         public event Action<string> TrackOutCompleted;
+        public event Action<string> TrackInRemoved;
         public event Action<string> TerminalMessageNotified;
         public event Action<string> SystemLogMessage;
 
-        public MesCoordinator(AppConfig config, IEapMqttService eapService, IOpcService opcService, ILogService logger = null)
+        public MesCoordinator(AppConfig config, IEapMqttService eapService, IOpcService opcService, ILogService logger = null, TrackedOrderStorageService storageService = null)
         {
             _config = config ?? new AppConfig();
             _logger = logger ?? LogService.Instance;
+            _storageService = storageService ?? new TrackedOrderStorageService();
             if (!string.IsNullOrWhiteSpace(_config.Mqtt?.EqID))
             {
                 _logger.DefaultEquipmentId = _config.Mqtt.EqID;
@@ -49,6 +52,22 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             EapService = eapService;
             OpcService = opcService;
+
+            // 自動從本機還原已進站工單快取 (重啟不遺失)
+            try
+            {
+                var persisted = _storageService.Load();
+                if (persisted != null && persisted.Count > 0)
+                {
+                    _trackedInOrders.AddRange(persisted);
+                    CurrentOrder = _trackedInOrders.LastOrDefault();
+                    _logger.Info("Coordinator", $"[本地快取還原] 已自動載入 {persisted.Count} 筆未出站工單 (當前主工單: {CurrentOrder?.WorkOrder})");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn("Coordinator", $"[本地快取還原失敗] {ex.Message}");
+            }
 
             // 綁定日誌
             EapService.LogMessage += msg =>
@@ -207,6 +226,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
                 CurrentOrder = orderInfo;
                 _trackedInOrders.Add(orderInfo);
+                _storageService.Save(_trackedInOrders);
                 TrackInCompleted?.Invoke(orderInfo);
 
                 _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}");
@@ -317,8 +337,9 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 _trackedInOrders.RemoveAll(o => o.WorkOrder == primaryWo);
                 if (CurrentOrder?.WorkOrder == primaryWo)
                 {
-                    CurrentOrder = null;
+                    CurrentOrder = _trackedInOrders.LastOrDefault();
                 }
+                _storageService.Save(_trackedInOrders);
                 TrackOutCompleted?.Invoke(primaryWo);
                 _logger.Info("TrackOut", $"工單出站成功: 工單 {primaryWo} 帳務過帳完成。");
                 SystemLogMessage?.Invoke($"[工單出站成功] 工單 {primaryWo} 帳務過帳完成。");
@@ -368,6 +389,26 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 MaterialID = replyMsg.MaterialID,
                 ToolingID = replyMsg.ToolingID
             };
+        }
+
+        public bool RemoveTrackedInOrder(string workOrder)
+        {
+            if (string.IsNullOrWhiteSpace(workOrder)) return false;
+
+            int count = _trackedInOrders.RemoveAll(o => string.Equals(o.WorkOrder, workOrder, StringComparison.OrdinalIgnoreCase));
+            if (count > 0)
+            {
+                if (string.Equals(CurrentOrder?.WorkOrder, workOrder, StringComparison.OrdinalIgnoreCase))
+                {
+                    CurrentOrder = _trackedInOrders.LastOrDefault();
+                }
+                _storageService.Save(_trackedInOrders);
+                TrackInRemoved?.Invoke(workOrder);
+                _logger.Warn("Coordinator", $"[手動解除進站] 人員手動強制自本機移除已進站工單: {workOrder}，剩餘已進站數: {_trackedInOrders.Count}");
+                SystemLogMessage?.Invoke($"[手動移除進站] 已從本機清單強制移除工單: {workOrder}");
+                return true;
+            }
+            return false;
         }
 
         public async Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default)

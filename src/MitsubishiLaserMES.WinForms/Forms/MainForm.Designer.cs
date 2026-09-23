@@ -87,6 +87,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.grpTrackedInList = new System.Windows.Forms.GroupBox();
             this.dgvTrackedIn = new System.Windows.Forms.DataGridView();
+            this.btnRemoveTrackedIn = new System.Windows.Forms.Button();
+            this.cmsTrackedIn = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tsmiRemoveTrackedIn = new System.Windows.Forms.ToolStripMenuItem();
 
             this.grpOrderActions = new System.Windows.Forms.GroupBox();
             this.btnTrackIn = new System.Windows.Forms.Button();
@@ -514,6 +517,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             // --- grpTrackedInList ---
             this.grpTrackedInList.Controls.Add(this.dgvTrackedIn);
+            this.grpTrackedInList.Controls.Add(this.btnRemoveTrackedIn);
             this.grpTrackedInList.Location = new System.Drawing.Point(560, 10);
             this.grpTrackedInList.Name = "grpTrackedInList";
             this.grpTrackedInList.Size = new System.Drawing.Size(385, 230);
@@ -528,18 +532,39 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvTrackedIn.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
                 this.colWoNo,
                 this.colOther1});
-            this.dgvTrackedIn.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvTrackedIn.Location = new System.Drawing.Point(3, 19);
+            this.dgvTrackedIn.ContextMenuStrip = this.cmsTrackedIn;
+            this.dgvTrackedIn.Location = new System.Drawing.Point(6, 20);
+            this.dgvTrackedIn.MultiSelect = false;
             this.dgvTrackedIn.Name = "dgvTrackedIn";
             this.dgvTrackedIn.ReadOnly = true;
             this.dgvTrackedIn.RowTemplate.Height = 25;
-            this.dgvTrackedIn.Size = new System.Drawing.Size(379, 208);
+            this.dgvTrackedIn.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvTrackedIn.Size = new System.Drawing.Size(373, 168);
             this.dgvTrackedIn.TabIndex = 0;
 
             this.colWoNo.HeaderText = "工單號碼(WoNo)";
             this.colWoNo.Name = "WoNo";
-            this.colOther1.HeaderText = "其他1";
+            this.colOther1.HeaderText = "卡匣號碼(CassetteId)";
             this.colOther1.Name = "Other1";
+
+            // btnRemoveTrackedIn
+            this.btnRemoveTrackedIn.Location = new System.Drawing.Point(235, 194);
+            this.btnRemoveTrackedIn.Name = "btnRemoveTrackedIn";
+            this.btnRemoveTrackedIn.Size = new System.Drawing.Size(144, 28);
+            this.btnRemoveTrackedIn.TabIndex = 1;
+            this.btnRemoveTrackedIn.Text = "移除選取工單";
+            this.btnRemoveTrackedIn.UseVisualStyleBackColor = true;
+
+            // cmsTrackedIn
+            this.cmsTrackedIn.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.tsmiRemoveTrackedIn});
+            this.cmsTrackedIn.Name = "cmsTrackedIn";
+            this.cmsTrackedIn.Size = new System.Drawing.Size(215, 26);
+
+            // tsmiRemoveTrackedIn
+            this.tsmiRemoveTrackedIn.Name = "tsmiRemoveTrackedIn";
+            this.tsmiRemoveTrackedIn.Size = new System.Drawing.Size(214, 22);
+            this.tsmiRemoveTrackedIn.Text = "強制移除此工單(解除進站)";
 
             // --- grpOrderActions ---
             this.grpOrderActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -1035,6 +1060,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private System.Windows.Forms.GroupBox grpTrackedInList;
         private System.Windows.Forms.DataGridView dgvTrackedIn;
+        private System.Windows.Forms.Button btnRemoveTrackedIn;
+        private System.Windows.Forms.ContextMenuStrip cmsTrackedIn;
+        private System.Windows.Forms.ToolStripMenuItem tsmiRemoveTrackedIn;
 
         private System.Windows.Forms.GroupBox grpOrderActions;
         private System.Windows.Forms.Button btnTrackIn;

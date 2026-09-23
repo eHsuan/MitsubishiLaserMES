@@ -38,6 +38,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         event Action OperatorLoggedOut;
         event Action<TrackedInOrderInfo> TrackInCompleted;
         event Action<string> TrackOutCompleted;
+        event Action<string> TrackInRemoved;
         event Action<string> TerminalMessageNotified;
         event Action<string> SystemLogMessage;
 
@@ -48,6 +49,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         Task<ReplyTrackOutReqMessage> TrackOutAsync(TrackOutReqMessage req, CancellationToken cancellationToken = default);
         Task<ReplyTrackInReqPayload> TrackInAsync(TrackInReqPayload req, CancellationToken cancellationToken = default);
         Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default);
+        bool RemoveTrackedInOrder(string workOrder);
         Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default);
     }
 }
