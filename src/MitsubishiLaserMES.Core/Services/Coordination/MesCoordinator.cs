@@ -85,6 +85,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             OpcService.StatusLightChanged += OnOpcStatusLightChanged;
             OpcService.ProcessedCountChanged += OnOpcProcessedCountChanged;
             OpcService.AlarmTriggered += OnOpcAlarmTriggered;
+            OpcService.ConnectionStateChanged += OnOpcConnectionStateChanged;
 
             // 綁定 EAP 下行指令與遠端指令交握處理器
             EapService.RemoteCommandHandler = HandleRemoteCommandAsync;
@@ -101,6 +102,31 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             await Task.WhenAll(eapTask, opcTask).ConfigureAwait(false);
 
             SystemLogMessage?.Invoke($"[系統初始化完成] EAP連線: {EapService.IsConnected}, OPC連線: {OpcService.IsConnected}");
+
+            // 程式啟動初始化完成後，若機台 OPC 已連線，自動下令切換機台為 SEMI-AUTO 模式
+            if (OpcService.IsConnected && OpcService.CurrentOpcMode != MitsubishiOpcMode.OnlineSemiAuto)
+            {
+                try
+                {
+                    SystemLogMessage?.Invoke("[模式切換] 程式啟動連線完成，自動下令機台切換為 SEMI-AUTO (OnlineSemiAuto) 模式...");
+                    bool modeOk = await SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineSemiAuto, cancellationToken).ConfigureAwait(false);
+                    if (modeOk)
+                    {
+                        _logger.Info("Coordinator", "程式啟動完成，機台已自動切換為 SEMI-AUTO 模式。");
+                        SystemLogMessage?.Invoke("[模式切換成功] 機台已切換為 SEMI-AUTO 模式。");
+                    }
+                    else
+                    {
+                        _logger.Warn("Coordinator", "程式啟動完成，但自動切換為 SEMI-AUTO 模式未成功。");
+                        SystemLogMessage?.Invoke("[模式切換未成功] 自動切換為 SEMI-AUTO 模式未成功 (機台可能非 Idle 狀態)。");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn("Coordinator", $"[模式切換例外] {ex.Message}");
+                }
+            }
+
             return EapService.IsConnected || OpcService.IsConnected;
         }
 
@@ -418,6 +444,40 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         }
 
         #region OPC 事件監聽 ➔ EAP 上報
+
+        private void OnOpcConnectionStateChanged(bool connected)
+        {
+            if (connected)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // 稍候 500ms 確保節點初始化與工作階段完全就緒
+                        await Task.Delay(500).ConfigureAwait(false);
+                        if (OpcService.IsConnected && OpcService.CurrentOpcMode != MitsubishiOpcMode.OnlineSemiAuto)
+                        {
+                            SystemLogMessage?.Invoke("[OPC 自動切換模式] 偵測到機台 OPC 已連線，自動發送命令切換為 SEMI-AUTO 模式...");
+                            bool ok = await SwitchOpcModeAsync((short)MitsubishiOpcMode.OnlineSemiAuto).ConfigureAwait(false);
+                            if (ok)
+                            {
+                                _logger.Info("Coordinator", "機台 OPC 連線建立，已自動切換機台為 SEMI-AUTO 模式。");
+                                SystemLogMessage?.Invoke("[OPC 自動切換模式成功] 機台已切換為 SEMI-AUTO 模式。");
+                            }
+                            else
+                            {
+                                _logger.Warn("Coordinator", "機台 OPC 連線建立，但切換 SEMI-AUTO 模式未成功。");
+                                SystemLogMessage?.Invoke("[OPC 自動切換模式未成功] 機台切換 SEMI-AUTO 模式未成功 (機台可能非 Idle 狀態)。");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warn("Coordinator", $"[OPC 自動切換模式例外] {ex.Message}");
+                    }
+                });
+            }
+        }
 
         private void OnOpcStatusLightChanged(MachineStatusLight oldLight, MachineStatusLight newLight)
         {
