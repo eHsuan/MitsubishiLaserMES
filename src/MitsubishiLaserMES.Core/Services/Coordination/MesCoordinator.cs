@@ -183,7 +183,9 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             var reply = await EapService.SendProtocolRequestAsync<TrackInReqMessage, ReplyTrackInReqMessage>(req, cancellationToken).ConfigureAwait(false);
 
-            if (reply.RtnResult == RtnResult.PASS && (reply.CMD == CommandType.ReplyTrackInReq || reply.CMD == CommandType.AlarmReport))
+            bool isTrackInSuccess = (reply.RtnResult == RtnResult.PASS || string.Equals(reply.RtnResult.ToString(), "SUCCESS", StringComparison.OrdinalIgnoreCase))
+                && (reply.CMD == CommandType.ReplyTrackInReq || reply.CMD == CommandType.AlarmReport);
+            if (isTrackInSuccess)
             {
                 string primaryWo = reply.WorkOrder != null && reply.WorkOrder.Count > 0 ? reply.WorkOrder[0] : (req.WorkOrder != null && req.WorkOrder.Count > 0 ? req.WorkOrder[0] : "");
                 string primaryCst = reply.CassetteID != null && reply.CassetteID.Count > 0 ? reply.CassetteID[0] : (req.CassetteID != null && req.CassetteID.Count > 0 ? req.CassetteID[0] : "");
@@ -307,7 +309,9 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             var reply = await EapService.SendProtocolRequestAsync<TrackOutReqMessage, ReplyTrackOutReqMessage>(req, cancellationToken).ConfigureAwait(false);
 
-            if (reply.RtnResult == RtnResult.PASS && (reply.CMD == CommandType.ReplyTrackOutReq || reply.CMD == CommandType.AlarmReport))
+            bool isTrackOutSuccess = (reply.RtnResult == RtnResult.PASS || string.Equals(reply.RtnResult.ToString(), "SUCCESS", StringComparison.OrdinalIgnoreCase))
+                && (reply.CMD == CommandType.ReplyTrackOutReq || reply.CMD == CommandType.AlarmReport);
+            if (isTrackOutSuccess)
             {
                 string primaryWo = req.WorkOrder?.FirstOrDefault() ?? (CurrentOrder?.WorkOrder ?? "");
                 _trackedInOrders.RemoveAll(o => o.WorkOrder == primaryWo);

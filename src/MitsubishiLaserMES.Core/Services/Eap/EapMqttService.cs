@@ -55,7 +55,12 @@ namespace MitsubishiLaserMES.Core.Services.Eap
         {
             if (IsConnected)
             {
-                LogMessage?.Invoke("[MQTT] 目前已處於連線狀態，無需重複連線。");
+                LogMessage?.Invoke("[MQTT] 目前已處於連線狀態。");
+                if (!IsAliveGreen)
+                {
+                    LogMessage?.Invoke("[MQTT] 目前處於非存活狀態，立即觸發存活探測 (AreYouThere)...");
+                    _ = SendAlivePingAsync(cancellationToken);
+                }
                 return true;
             }
 
@@ -378,21 +383,20 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                 string cmd = payloadObj["CMD"]?.ToString()?.Trim() ?? string.Empty;
                 string transactionId = payloadObj["TransactionID"]?.ToString()?.Trim() ?? string.Empty;
 
-                // 1. 若明確為 Reply 類別且為等待中的請求 (避免將共用 TransactionID 之 RemoteCMD 等指令誤判為 Reply)
+                // 1. 若為存活檢測回覆 (IamHere)，代表雙向鏈路暢通，立即點亮綠燈 (AREYOUTHERE 與 IAMHERE 不需要判斷 RtnResult)
+                if (string.Equals(cmd, "IamHere", StringComparison.OrdinalIgnoreCase))
+                {
+                    IsAliveGreen = true;
+                    AliveStatusChanged?.Invoke(true);
+                }
+
+                // 2. 若明確為 Reply 類別且為等待中的請求 (避免將共用 TransactionID 之 RemoteCMD 等指令誤判為 Reply)
                 bool isReplyMessage = cmd.StartsWith("Reply", StringComparison.OrdinalIgnoreCase)
                                    || string.Equals(cmd, "IamHere", StringComparison.OrdinalIgnoreCase);
 
                 if (isReplyMessage && !string.IsNullOrEmpty(transactionId) && _pendingRequests.TryGetValue(transactionId, out var tcs))
                 {
                     tcs.TrySetResult(payloadObj.ToString());
-                    return Task.CompletedTask;
-                }
-
-                // 2. 存活檢測回覆 (EQ 發起之 AreYouThere 的 IamHere 回覆)
-                if (string.Equals(cmd, "IamHere", StringComparison.OrdinalIgnoreCase))
-                {
-                    IsAliveGreen = true;
-                    AliveStatusChanged?.Invoke(true);
                     return Task.CompletedTask;
                 }
 
@@ -602,7 +606,8 @@ namespace MitsubishiLaserMES.Core.Services.Eap
                     Machine = _settings.EqID
                 };
                 var reply = await SendRequestAsync<AliveCheckReqPayload, AliveCheckReplyPayload>(ping, token).ConfigureAwait(false);
-                bool ok = reply != null && reply.IsPass;
+                // AREYOUTHERE 與 IAMHERE 不需要判斷 RtnResult，只要收到回覆且 CMD 為 IamHere 即代表存活
+                bool ok = reply != null && string.Equals(reply.CMD, "IamHere", StringComparison.OrdinalIgnoreCase);
                 IsAliveGreen = ok;
                 AliveStatusChanged?.Invoke(ok);
             }

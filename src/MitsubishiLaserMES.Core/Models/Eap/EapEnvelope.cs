@@ -78,6 +78,8 @@ namespace MitsubishiLaserMES.Core.Models.Eap
         }
 
         [JsonIgnore]
-        public bool IsPass => string.Equals(RtnResult, "PASS", StringComparison.OrdinalIgnoreCase);
+        public bool IsPass => string.Equals(RtnResult, "SUCCESS", StringComparison.OrdinalIgnoreCase)
+                           || string.Equals(RtnResult, "PASS", StringComparison.OrdinalIgnoreCase)
+                           || RtnResult == "0";
     }
 }
