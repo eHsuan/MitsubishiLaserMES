@@ -85,17 +85,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.lblComponentNo = new System.Windows.Forms.Label();
             this.txtComponentNo = new System.Windows.Forms.TextBox();
 
-            this.grpNgInput = new System.Windows.Forms.GroupBox();
-            this.chkNoNg = new System.Windows.Forms.CheckBox();
-            this.btnAddNg = new System.Windows.Forms.Button();
-            this.btnRemoveNg = new System.Windows.Forms.Button();
-            this.dgvNgList = new System.Windows.Forms.DataGridView();
-
             this.grpTrackedInList = new System.Windows.Forms.GroupBox();
             this.dgvTrackedIn = new System.Windows.Forms.DataGridView();
-
-            this.grpManageParams = new System.Windows.Forms.GroupBox();
-            this.dgvManageParams = new System.Windows.Forms.DataGridView();
 
             this.grpOrderActions = new System.Windows.Forms.GroupBox();
             this.btnTrackIn = new System.Windows.Forms.Button();
@@ -135,17 +126,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvMqttLogs = new System.Windows.Forms.DataGridView();
 
             // 實例化 DataGridView 欄位
-            this.colNgCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgChineseName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colNgQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
-
             this.colWoNo = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colOther1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-
-            this.colParamName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colParamValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMustInput = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colInputType = new System.Windows.Forms.DataGridViewTextBoxColumn();
 
             this.colAlarmCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAlarmMsg = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -167,9 +149,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.txtResultMessage = new System.Windows.Forms.TextBox();
 
             // BeginInit DataGridViews
-            ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvManageParams)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).BeginInit();
 
@@ -180,9 +160,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.tabEquipment.SuspendLayout();
             this.tabItTest.SuspendLayout();
             this.grpOrderInfo.SuspendLayout();
-            this.grpNgInput.SuspendLayout();
             this.grpTrackedInList.SuspendLayout();
-            this.grpManageParams.SuspendLayout();
             this.grpOrderActions.SuspendLayout();
             this.grpOpcStatus.SuspendLayout();
             this.grpAlarmList.SuspendLayout();
@@ -357,10 +335,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             // ================= tabWorkOrder =================
             this.tabWorkOrder.Controls.Add(this.grpOrderInfo);
-            this.tabWorkOrder.Controls.Add(this.grpNgInput);
-            this.tabWorkOrder.Controls.Add(this.grpOrderActions);
             this.tabWorkOrder.Controls.Add(this.grpTrackedInList);
-            this.tabWorkOrder.Controls.Add(this.grpManageParams);
+            this.tabWorkOrder.Controls.Add(this.grpOpcStatus);
+            this.tabWorkOrder.Controls.Add(this.grpOrderActions);
             this.tabWorkOrder.Location = new System.Drawing.Point(4, 26);
             this.tabWorkOrder.Name = "tabWorkOrder";
             this.tabWorkOrder.Padding = new System.Windows.Forms.Padding(3);
@@ -535,71 +512,12 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.txtComponentNo.Size = new System.Drawing.Size(160, 23);
             this.txtComponentNo.TabIndex = 21;
 
-            // --- grpNgInput ---
-            this.grpNgInput.Controls.Add(this.chkNoNg);
-            this.grpNgInput.Controls.Add(this.btnAddNg);
-            this.grpNgInput.Controls.Add(this.btnRemoveNg);
-            this.grpNgInput.Controls.Add(this.dgvNgList);
-            this.grpNgInput.Location = new System.Drawing.Point(560, 10);
-            this.grpNgInput.Name = "grpNgInput";
-            this.grpNgInput.Size = new System.Drawing.Size(380, 230);
-            this.grpNgInput.TabIndex = 1;
-            this.grpNgInput.TabStop = false;
-            this.grpNgInput.Text = "不良輸入";
-
-            this.chkNoNg.AutoSize = true;
-            this.chkNoNg.Checked = true;
-            this.chkNoNg.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkNoNg.Location = new System.Drawing.Point(15, 20);
-            this.chkNoNg.Name = "chkNoNg";
-            this.chkNoNg.Size = new System.Drawing.Size(87, 21);
-            this.chkNoNg.TabIndex = 0;
-            this.chkNoNg.Text = "本站無不良";
-            this.chkNoNg.UseVisualStyleBackColor = true;
-
-            this.btnAddNg.Location = new System.Drawing.Point(200, 16);
-            this.btnAddNg.Name = "btnAddNg";
-            this.btnAddNg.Size = new System.Drawing.Size(80, 25);
-            this.btnAddNg.TabIndex = 1;
-            this.btnAddNg.Text = "新增不良";
-            this.btnAddNg.UseVisualStyleBackColor = true;
-
-            this.btnRemoveNg.Location = new System.Drawing.Point(290, 16);
-            this.btnRemoveNg.Name = "btnRemoveNg";
-            this.btnRemoveNg.Size = new System.Drawing.Size(80, 25);
-            this.btnRemoveNg.TabIndex = 2;
-            this.btnRemoveNg.Text = "刪除不良";
-            this.btnRemoveNg.UseVisualStyleBackColor = true;
-
-            this.dgvNgList.AllowUserToAddRows = false;
-            this.dgvNgList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvNgList.BackgroundColor = System.Drawing.Color.White;
-            this.dgvNgList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvNgList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.colNgCode,
-                this.colNgChineseName,
-                this.colNgQty});
-            this.dgvNgList.Location = new System.Drawing.Point(15, 48);
-            this.dgvNgList.Name = "dgvNgList";
-            this.dgvNgList.RowTemplate.Height = 25;
-            this.dgvNgList.Size = new System.Drawing.Size(355, 170);
-            this.dgvNgList.TabIndex = 3;
-
-            this.colNgCode.HeaderText = "NGCode";
-            this.colNgCode.Name = "NGCode";
-            this.colNgChineseName.HeaderText = "NG Chinese Name";
-            this.colNgChineseName.Name = "NGChineseName";
-            this.colNgQty.HeaderText = "Qty";
-            this.colNgQty.Name = "Qty";
-
             // --- grpTrackedInList ---
-            this.grpTrackedInList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)));
             this.grpTrackedInList.Controls.Add(this.dgvTrackedIn);
-            this.grpTrackedInList.Location = new System.Drawing.Point(10, 245);
+            this.grpTrackedInList.Location = new System.Drawing.Point(560, 10);
             this.grpTrackedInList.Name = "grpTrackedInList";
-            this.grpTrackedInList.Size = new System.Drawing.Size(260, 220);
-            this.grpTrackedInList.TabIndex = 2;
+            this.grpTrackedInList.Size = new System.Drawing.Size(385, 230);
+            this.grpTrackedInList.TabIndex = 1;
             this.grpTrackedInList.TabStop = false;
             this.grpTrackedInList.Text = "已進站工單清單";
 
@@ -615,50 +533,13 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.dgvTrackedIn.Name = "dgvTrackedIn";
             this.dgvTrackedIn.ReadOnly = true;
             this.dgvTrackedIn.RowTemplate.Height = 25;
-            this.dgvTrackedIn.Size = new System.Drawing.Size(254, 198);
+            this.dgvTrackedIn.Size = new System.Drawing.Size(379, 208);
             this.dgvTrackedIn.TabIndex = 0;
 
             this.colWoNo.HeaderText = "工單號碼(WoNo)";
             this.colWoNo.Name = "WoNo";
             this.colOther1.HeaderText = "其他1";
             this.colOther1.Name = "Other1";
-
-            // --- grpManageParams ---
-            this.grpManageParams.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.grpManageParams.Controls.Add(this.dgvManageParams);
-            this.grpManageParams.Location = new System.Drawing.Point(280, 245);
-            this.grpManageParams.Name = "grpManageParams";
-            this.grpManageParams.Size = new System.Drawing.Size(660, 220);
-            this.grpManageParams.TabIndex = 3;
-            this.grpManageParams.TabStop = false;
-            this.grpManageParams.Text = "管理項目 參 數";
-
-            this.dgvManageParams.AllowUserToAddRows = false;
-            this.dgvManageParams.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvManageParams.BackgroundColor = System.Drawing.Color.White;
-            this.dgvManageParams.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvManageParams.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.colParamName,
-                this.colParamValue,
-                this.colMustInput,
-                this.colInputType});
-            this.dgvManageParams.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvManageParams.Location = new System.Drawing.Point(3, 19);
-            this.dgvManageParams.Name = "dgvManageParams";
-            this.dgvManageParams.RowTemplate.Height = 25;
-            this.dgvManageParams.Size = new System.Drawing.Size(654, 198);
-            this.dgvManageParams.TabIndex = 0;
-
-            this.colParamName.HeaderText = "管理項目名稱(Manage item name)";
-            this.colParamName.Name = "Name";
-            this.colParamValue.HeaderText = "管理項目值(Manage item values)";
-            this.colParamValue.Name = "Value";
-            this.colMustInput.HeaderText = "需輸入?(Must Input?)";
-            this.colMustInput.Name = "MustInput";
-            this.colInputType.HeaderText = "輸入類型(Input type)";
-            this.colInputType.Name = "InputType";
 
             // --- grpOrderActions ---
             this.grpOrderActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -706,18 +587,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnClearOrder.Text = "清除";
             this.btnClearOrder.UseVisualStyleBackColor = true;
 
-            // ================= tabEquipment =================
-            this.tabEquipment.Controls.Add(this.grpOpcStatus);
-            this.tabEquipment.Controls.Add(this.grpAlarmList);
-            this.tabEquipment.Location = new System.Drawing.Point(4, 26);
-            this.tabEquipment.Name = "tabEquipment";
-            this.tabEquipment.Padding = new System.Windows.Forms.Padding(3);
-            this.tabEquipment.Size = new System.Drawing.Size(1132, 470);
-            this.tabEquipment.TabIndex = 1;
-            this.tabEquipment.Text = "設備功能";
-            this.tabEquipment.UseVisualStyleBackColor = true;
-
             // --- grpOpcStatus ---
+            this.grpOpcStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.grpOpcStatus.Controls.Add(this.lblOpcConn);
             this.grpOpcStatus.Controls.Add(this.lblMachineState);
             this.grpOpcStatus.Controls.Add(this.lblProgress);
@@ -733,16 +605,16 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOpcStatus.Controls.Add(this.btnModeAuto);
             this.grpOpcStatus.Controls.Add(this.btnStartSchedule);
             this.grpOpcStatus.Controls.Add(this.btnOpenSimulator);
-            this.grpOpcStatus.Location = new System.Drawing.Point(15, 15);
+            this.grpOpcStatus.Location = new System.Drawing.Point(10, 245);
             this.grpOpcStatus.Name = "grpOpcStatus";
-            this.grpOpcStatus.Size = new System.Drawing.Size(1095, 180);
-            this.grpOpcStatus.TabIndex = 0;
+            this.grpOpcStatus.Size = new System.Drawing.Size(935, 220);
+            this.grpOpcStatus.TabIndex = 2;
             this.grpOpcStatus.TabStop = false;
             this.grpOpcStatus.Text = "三菱雷射機狀態與控制 (OPC UA)";
 
             this.lblOpcConn.AutoSize = true;
             this.lblOpcConn.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
-            this.lblOpcConn.Location = new System.Drawing.Point(20, 30);
+            this.lblOpcConn.Location = new System.Drawing.Point(20, 28);
             this.lblOpcConn.Name = "lblOpcConn";
             this.lblOpcConn.Size = new System.Drawing.Size(105, 18);
             this.lblOpcConn.TabIndex = 0;
@@ -750,7 +622,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.lblMachineState.AutoSize = true;
             this.lblMachineState.Font = new System.Drawing.Font("微軟正黑體", 10F, System.Drawing.FontStyle.Bold);
-            this.lblMachineState.Location = new System.Drawing.Point(220, 30);
+            this.lblMachineState.Location = new System.Drawing.Point(210, 28);
             this.lblMachineState.Name = "lblMachineState";
             this.lblMachineState.Size = new System.Drawing.Size(139, 18);
             this.lblMachineState.TabIndex = 1;
@@ -758,28 +630,37 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.lblProgress.AutoSize = true;
             this.lblProgress.Font = new System.Drawing.Font("微軟正黑體", 10F);
-            this.lblProgress.Location = new System.Drawing.Point(480, 30);
+            this.lblProgress.Location = new System.Drawing.Point(420, 28);
             this.lblProgress.Name = "lblProgress";
             this.lblProgress.Size = new System.Drawing.Size(95, 18);
             this.lblProgress.TabIndex = 2;
             this.lblProgress.Text = "加工計數: 0 / 0";
 
             this.lblActivePrg.AutoSize = true;
-            this.lblActivePrg.Location = new System.Drawing.Point(20, 65);
+            this.lblActivePrg.Location = new System.Drawing.Point(590, 28);
             this.lblActivePrg.Name = "lblActivePrg";
             this.lblActivePrg.Size = new System.Drawing.Size(104, 17);
             this.lblActivePrg.TabIndex = 3;
             this.lblActivePrg.Text = "目前加工程式: 無";
 
+            this.btnOpenSimulator.BackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnOpenSimulator.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.btnOpenSimulator.Location = new System.Drawing.Point(750, 20);
+            this.btnOpenSimulator.Name = "btnOpenSimulator";
+            this.btnOpenSimulator.Size = new System.Drawing.Size(165, 34);
+            this.btnOpenSimulator.TabIndex = 14;
+            this.btnOpenSimulator.Text = "開啟機台模擬器 (OPC)";
+            this.btnOpenSimulator.UseVisualStyleBackColor = false;
+
             this.pnlLampGreen.BackColor = System.Drawing.Color.DarkGreen;
             this.pnlLampGreen.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlLampGreen.Location = new System.Drawing.Point(20, 100);
+            this.pnlLampGreen.Location = new System.Drawing.Point(20, 72);
             this.pnlLampGreen.Name = "pnlLampGreen";
             this.pnlLampGreen.Size = new System.Drawing.Size(24, 24);
             this.pnlLampGreen.TabIndex = 4;
 
             this.lblLampGreen.AutoSize = true;
-            this.lblLampGreen.Location = new System.Drawing.Point(50, 104);
+            this.lblLampGreen.Location = new System.Drawing.Point(50, 76);
             this.lblLampGreen.Name = "lblLampGreen";
             this.lblLampGreen.Size = new System.Drawing.Size(117, 17);
             this.lblLampGreen.TabIndex = 5;
@@ -787,13 +668,13 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.pnlLampYellow.BackColor = System.Drawing.Color.DarkGoldenrod;
             this.pnlLampYellow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlLampYellow.Location = new System.Drawing.Point(200, 100);
+            this.pnlLampYellow.Location = new System.Drawing.Point(210, 72);
             this.pnlLampYellow.Name = "pnlLampYellow";
             this.pnlLampYellow.Size = new System.Drawing.Size(24, 24);
             this.pnlLampYellow.TabIndex = 6;
 
             this.lblLampYellow.AutoSize = true;
-            this.lblLampYellow.Location = new System.Drawing.Point(230, 104);
+            this.lblLampYellow.Location = new System.Drawing.Point(240, 76);
             this.lblLampYellow.Name = "lblLampYellow";
             this.lblLampYellow.Size = new System.Drawing.Size(126, 17);
             this.lblLampYellow.TabIndex = 7;
@@ -801,65 +682,66 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.pnlLampRed.BackColor = System.Drawing.Color.DarkRed;
             this.pnlLampRed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlLampRed.Location = new System.Drawing.Point(380, 100);
+            this.pnlLampRed.Location = new System.Drawing.Point(420, 72);
             this.pnlLampRed.Name = "pnlLampRed";
             this.pnlLampRed.Size = new System.Drawing.Size(24, 24);
             this.pnlLampRed.TabIndex = 8;
 
             this.lblLampRed.AutoSize = true;
-            this.lblLampRed.Location = new System.Drawing.Point(410, 104);
+            this.lblLampRed.Location = new System.Drawing.Point(450, 76);
             this.lblLampRed.Name = "lblLampRed";
             this.lblLampRed.Size = new System.Drawing.Size(96, 17);
             this.lblLampRed.TabIndex = 9;
             this.lblLampRed.Text = "紅燈 (警報/異常)";
 
-            this.btnModeLocal.Location = new System.Drawing.Point(600, 95);
+            this.btnModeLocal.Location = new System.Drawing.Point(20, 115);
             this.btnModeLocal.Name = "btnModeLocal";
-            this.btnModeLocal.Size = new System.Drawing.Size(95, 32);
+            this.btnModeLocal.Size = new System.Drawing.Size(105, 36);
             this.btnModeLocal.TabIndex = 10;
             this.btnModeLocal.Text = "Local 模式";
             this.btnModeLocal.UseVisualStyleBackColor = true;
 
-            this.btnModeSemiAuto.Location = new System.Drawing.Point(705, 95);
+            this.btnModeSemiAuto.Location = new System.Drawing.Point(135, 115);
             this.btnModeSemiAuto.Name = "btnModeSemiAuto";
-            this.btnModeSemiAuto.Size = new System.Drawing.Size(115, 32);
+            this.btnModeSemiAuto.Size = new System.Drawing.Size(125, 36);
             this.btnModeSemiAuto.TabIndex = 11;
             this.btnModeSemiAuto.Text = "Semi-Auto 模式";
             this.btnModeSemiAuto.UseVisualStyleBackColor = true;
 
-            this.btnModeAuto.Location = new System.Drawing.Point(830, 95);
+            this.btnModeAuto.Location = new System.Drawing.Point(270, 115);
             this.btnModeAuto.Name = "btnModeAuto";
-            this.btnModeAuto.Size = new System.Drawing.Size(95, 32);
+            this.btnModeAuto.Size = new System.Drawing.Size(105, 36);
             this.btnModeAuto.TabIndex = 12;
             this.btnModeAuto.Text = "Auto 模式";
             this.btnModeAuto.UseVisualStyleBackColor = true;
 
             this.btnStartSchedule.BackColor = System.Drawing.Color.PaleGreen;
-            this.btnStartSchedule.Location = new System.Drawing.Point(940, 95);
+            this.btnStartSchedule.Location = new System.Drawing.Point(385, 115);
             this.btnStartSchedule.Name = "btnStartSchedule";
-            this.btnStartSchedule.Size = new System.Drawing.Size(125, 32);
+            this.btnStartSchedule.Size = new System.Drawing.Size(135, 36);
             this.btnStartSchedule.TabIndex = 13;
             this.btnStartSchedule.Text = "啟動連續運轉";
             this.btnStartSchedule.UseVisualStyleBackColor = false;
 
-            this.btnOpenSimulator.BackColor = System.Drawing.Color.LightSkyBlue;
-            this.btnOpenSimulator.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
-            this.btnOpenSimulator.Location = new System.Drawing.Point(915, 22);
-            this.btnOpenSimulator.Name = "btnOpenSimulator";
-            this.btnOpenSimulator.Size = new System.Drawing.Size(155, 34);
-            this.btnOpenSimulator.TabIndex = 14;
-            this.btnOpenSimulator.Text = "開啟機台模擬器 (OPC)";
-            this.btnOpenSimulator.UseVisualStyleBackColor = false;
+            // ================= tabEquipment =================
+            this.tabEquipment.Controls.Add(this.grpAlarmList);
+            this.tabEquipment.Location = new System.Drawing.Point(4, 26);
+            this.tabEquipment.Name = "tabEquipment";
+            this.tabEquipment.Padding = new System.Windows.Forms.Padding(3);
+            this.tabEquipment.Size = new System.Drawing.Size(1132, 470);
+            this.tabEquipment.TabIndex = 1;
+            this.tabEquipment.Text = "設備警報";
+            this.tabEquipment.UseVisualStyleBackColor = true;
 
             // --- grpAlarmList ---
             this.grpAlarmList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpAlarmList.Controls.Add(this.dgvAlarms);
-            this.grpAlarmList.Location = new System.Drawing.Point(15, 205);
+            this.grpAlarmList.Location = new System.Drawing.Point(15, 15);
             this.grpAlarmList.Name = "grpAlarmList";
-            this.grpAlarmList.Size = new System.Drawing.Size(1095, 260);
-            this.grpAlarmList.TabIndex = 1;
+            this.grpAlarmList.Size = new System.Drawing.Size(1095, 440);
+            this.grpAlarmList.TabIndex = 0;
             this.grpAlarmList.TabStop = false;
             this.grpAlarmList.Text = "當前活躍警報清單 (Active Alarms 000~009)";
 
@@ -1069,9 +951,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.Text = "MES - 2026/09/16";
 
             // EndInit DataGridViews
-            ((System.ComponentModel.ISupportInitialize)(this.dgvNgList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvManageParams)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).EndInit();
 
@@ -1085,10 +965,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.tabItTest.ResumeLayout(false);
             this.grpOrderInfo.ResumeLayout(false);
             this.grpOrderInfo.PerformLayout();
-            this.grpNgInput.ResumeLayout(false);
-            this.grpNgInput.PerformLayout();
             this.grpTrackedInList.ResumeLayout(false);
-            this.grpManageParams.ResumeLayout(false);
             this.grpOrderActions.ResumeLayout(false);
             this.grpOpcStatus.ResumeLayout(false);
             this.grpOpcStatus.PerformLayout();
@@ -1156,17 +1033,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.Label lblComponentNo;
         private System.Windows.Forms.TextBox txtComponentNo;
 
-        private System.Windows.Forms.GroupBox grpNgInput;
-        private System.Windows.Forms.CheckBox chkNoNg;
-        private System.Windows.Forms.Button btnAddNg;
-        private System.Windows.Forms.Button btnRemoveNg;
-        private System.Windows.Forms.DataGridView dgvNgList;
-
         private System.Windows.Forms.GroupBox grpTrackedInList;
         private System.Windows.Forms.DataGridView dgvTrackedIn;
-
-        private System.Windows.Forms.GroupBox grpManageParams;
-        private System.Windows.Forms.DataGridView dgvManageParams;
 
         private System.Windows.Forms.GroupBox grpOrderActions;
         private System.Windows.Forms.Button btnTrackIn;
@@ -1211,17 +1079,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.Label lblResultMessage;
         private System.Windows.Forms.TextBox txtResultMessage;
 
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgCode;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgChineseName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colNgQty;
-
         private System.Windows.Forms.DataGridViewTextBoxColumn colWoNo;
         private System.Windows.Forms.DataGridViewTextBoxColumn colOther1;
-
-        private System.Windows.Forms.DataGridViewTextBoxColumn colParamName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colParamValue;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colMustInput;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colInputType;
 
         private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmCode;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAlarmMsg;

@@ -244,26 +244,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
             };
             btnClearOrder.Click += (s, e) => ClearOrderInputs();
 
-            // 不良項增減
-            btnAddNg.Click += (s, e) =>
-            {
-                chkNoNg.Checked = false;
-                dgvNgList.Rows.Add("NG01", "孔偏/鑽孔不良", 1);
-            };
-            btnRemoveNg.Click += (s, e) =>
-            {
-                if (dgvNgList.SelectedRows.Count > 0)
-                {
-                    foreach (DataGridViewRow row in dgvNgList.SelectedRows)
-                    {
-                        dgvNgList.Rows.Remove(row);
-                    }
-                }
-                else if (dgvNgList.Rows.Count > 0)
-                {
-                    dgvNgList.Rows.RemoveAt(dgvNgList.Rows.Count - 1);
-                }
-            };
 
             // 設備功能按鈕
             btnModeLocal.Click += async (s, e) =>
@@ -451,21 +431,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 MaterialID = txtPartNo.Text.Trim(),
                 UserID = _coordinator.CurrentOperatorId,
                 Qty = qty.ToString(),
-                Result = chkNoNg.Checked ? "PASS" : "FAIL"
+                Result = "PASS"
             };
-
-            // 收集不良清單
-            if (!chkNoNg.Checked)
-            {
-                foreach (DataGridViewRow row in dgvNgList.Rows)
-                {
-                    string code = row.Cells["NGCode"].Value?.ToString() ?? "";
-                    string name = row.Cells["NGChineseName"].Value?.ToString() ?? "";
-                    int ngQty = Convert.ToInt32(row.Cells["Qty"].Value ?? 1);
-                    req.NgDetails.Add(new NgItem { NGCode = code, NGChineseName = name, Qty = ngQty });
-                }
-                req.NGCode = req.NgDetails.FirstOrDefault()?.NGCode ?? "NG";
-            }
 
             var reply = await MaskWaitForm.RunWithWaitAsync(this, "系統處理中... 正在向 EAP 執行工單出站過帳", async () =>
             {
@@ -493,8 +460,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtIsTrackedIn.Text = "未進站";
             txtIsTrackedIn.ForeColor = Color.Black;
             txtComponentNo.Clear();
-            dgvNgList.Rows.Clear();
-            chkNoNg.Checked = true;
             if (!_coordinator.IsTrackedIn)
             {
                 btnTrackIn.Enabled = true;
@@ -515,22 +480,6 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtCompletedQty.Text = "0";
             txtRecipeId.Text = "RECIPE_MITSUBISHI_01";
             txtIsTrackedIn.Text = "未進站";
-            // 管理項目參數：優先自 Profile.ManagementItems 與 Profile.Variables 載入
-            dgvManageParams.Rows.Clear();
-            if (_config.Profile?.ManagementItems != null && _config.Profile.ManagementItems.Count > 0)
-            {
-                foreach (var item in _config.Profile.ManagementItems)
-                {
-                    string name = _config.Profile.GetVariableName(item.Key, item.Key);
-                    dgvManageParams.Rows.Add(name, item.Key, item.Value == "Y" ? "是" : "否", "設定");
-                }
-            }
-            else
-            {
-                dgvManageParams.Rows.Add("雷射發振頻率 (Hz)", "100", "是", "數值");
-                dgvManageParams.Rows.Add("雷射功率 (W)", "5500", "是", "數值");
-                dgvManageParams.Rows.Add("吸著氣壓 (kPa)", "-10.5", "否", "數值");
-            }
         }
 
         private void UpdateEapLed()
