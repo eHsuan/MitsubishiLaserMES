@@ -398,7 +398,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             {
                 CMD = CommandType.TrackInReq,
                 WorkOrder = new List<string> { wo },
-                CassetteID = new List<string> { "C" + wo },
+                CassetteID = new List<string>(),
                 MaterialID = txtPartNo.Text.Trim(),
                 UserID = _coordinator.CurrentOperatorId,
                 ToolingID = string.Empty,
@@ -435,7 +435,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
             var req = new TrackOutReqPayload
             {
                 WorkOrder = new List<string> { wo },
-                CassetteID = new List<string> { "C" + wo },
+                CassetteID = !string.IsNullOrWhiteSpace(_coordinator.CurrentOrder?.CassetteId)
+                    ? new List<string> { _coordinator.CurrentOrder.CassetteId }
+                    : new List<string>(),
                 MaterialID = txtPartNo.Text.Trim(),
                 UserID = _coordinator.CurrentOperatorId,
                 Qty = qty.ToString(),
