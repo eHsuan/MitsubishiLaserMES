@@ -68,7 +68,10 @@ namespace MitsubishiLaserMES.Core.Services.Opc
                     var options = new MitsubishiOpcUaOptions
                     {
                         EndpointUrl = _settings.EndpointUrl,
-                        UseSecurity = _settings.UseSecurity
+                        UseSecurity = _settings.UseSecurity,
+                        MinimumCertificateKeySize = _settings.MinimumCertificateKeySize,
+                        RejectSha1SignedCertificates = _settings.RejectSha1SignedCertificates,
+                        AutoAcceptUntrustedCertificates = _settings.AutoAcceptUntrustedCertificates
                     };
                     var realClient = new MitsubishiOpcUaClient(options);
                     await realClient.ConnectAsync(cancellationToken).ConfigureAwait(false);

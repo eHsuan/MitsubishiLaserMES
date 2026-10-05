@@ -33,6 +33,9 @@ namespace MitsubishiLaserMES.Core.Models.Config
         public bool UseVirtualSimulator { get; set; } = true;
         public string EndpointUrl { get; set; } = "opc.tcp://127.0.0.1:4840";
         public bool UseSecurity { get; set; } = false;
+        public ushort MinimumCertificateKeySize { get; set; } = 1024;
+        public bool RejectSha1SignedCertificates { get; set; } = false;
+        public bool AutoAcceptUntrustedCertificates { get; set; } = true;
         public int WatchdogIntervalSec { get; set; } = 1;
         public int PollingIntervalMs { get; set; } = 1000;
     }
