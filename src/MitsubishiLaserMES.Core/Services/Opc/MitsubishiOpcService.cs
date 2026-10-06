@@ -125,7 +125,12 @@ namespace MitsubishiLaserMES.Core.Services.Opc
             return Task.CompletedTask;
         }
 
-        public async Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default)
+        public Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default)
+        {
+            return DeliverRecipeAsync(recipeId, "*****", sheetCount, cancellationToken);
+        }
+
+        public async Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
         {
             if (!IsConnected || _handshakeService == null)
             {
@@ -135,16 +140,18 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
             try
             {
-                // 依原廠規範 P.11，未用條件檔時 ConditionFile 固定帶 "*****"
+                // 依原廠規範 P.11，未用條件檔或空值時 ConditionFile 固定帶 "*****"
+                string finalCondition = string.IsNullOrWhiteSpace(conditionFile) ? "*****" : conditionFile;
+
                 var recipe = new RecipeDefinition(
-                    recipeId: recipeId,
+                    recipeId: programFile,
                     version: "1.0",
-                    programFile: recipeId,
-                    conditionFile: "*****",
+                    programFile: programFile,
+                    conditionFile: finalCondition,
                     sheetCount: sheetCount
                 );
 
-                LogMessage?.Invoke($"[OPC] 開始執行 Recipe 交握: ProgramFile={recipeId}, ConditionFile=*****, SheetNum={sheetCount}");
+                LogMessage?.Invoke($"[OPC] 開始執行 Recipe 交握: ProgramFile={programFile}, ConditionFile={finalCondition}, SheetNum={sheetCount}");
                 var result = await _handshakeService.DeliverRecipeAsync(recipe, cancellationToken).ConfigureAwait(false);
                 if (result.Succeeded)
                 {

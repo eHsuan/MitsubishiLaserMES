@@ -177,6 +177,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
         private void BindFormEvents()
         {
+            // 綁定人工輸入的加工條件檔名提供者
+            _coordinator.ManualConditionFileProvider = () => txtConditionFile.Text.Trim();
+
             this.Load += async (s, e) =>
             {
                 // 自動初始化連線
@@ -467,6 +470,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtRunQty.Clear();
             txtCompletedQty.Clear();
             txtRecipeId.Clear();
+            txtConditionFile.Clear();
             txtIsTrackedIn.Text = "未進站";
             txtIsTrackedIn.ForeColor = Color.Black;
             txtComponentNo.Clear();
@@ -489,6 +493,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             txtRunQty.Text = "20";
             txtCompletedQty.Text = "0";
             txtRecipeId.Text = "RECIPE_MITSUBISHI_01";
+            txtConditionFile.Text = "";
             txtIsTrackedIn.Text = "未進站";
         }
 

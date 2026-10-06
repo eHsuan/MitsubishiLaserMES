@@ -21,6 +21,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private CheckBox chkUseVirtual;
         private TextBox txtOpcEndpoint;
         private CheckBox chkOpcSecurity;
+        private TextBox txtRecipeDir;
 
         public SettingsForm() : this(new AppConfig())
         {
@@ -36,7 +37,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private void InitializeComponent()
         {
             Text = "MES 與機台通訊設定";
-            Size = new Size(540, 520);
+            Size = new Size(540, 560);
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -97,7 +98,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             {
                 Text = "下位三菱雷射機通訊設定 (OPC UA)",
                 Location = new Point(15, 275),
-                Size = new Size(495, 140)
+                Size = new Size(495, 175)
             };
 
             chkUseVirtual = new CheckBox
@@ -114,20 +115,23 @@ namespace MitsubishiLaserMES.WinForms.Forms
             chkOpcSecurity = new CheckBox
             {
                 Text = "使用安全加密連線 (Use Security)",
-                Location = new Point(125, 98),
+                Location = new Point(125, 96),
                 AutoSize = true
             };
 
+            var lblRecipeDir = new Label { Text = "配方存放路徑:", Location = new Point(15, 130), AutoSize = true };
+            txtRecipeDir = new TextBox { Location = new Point(125, 127), Width = 345 };
+
             grpOpc.Controls.AddRange(new Control[]
             {
-                chkUseVirtual, lblEndpoint, txtOpcEndpoint, chkOpcSecurity
+                chkUseVirtual, lblEndpoint, txtOpcEndpoint, chkOpcSecurity, lblRecipeDir, txtRecipeDir
             });
 
             // 按鈕
             var btnSave = new Button
             {
                 Text = "儲存設定 (Save)",
-                Location = new Point(150, 430),
+                Location = new Point(150, 465),
                 Size = new Size(110, 36),
                 DialogResult = DialogResult.OK
             };
@@ -136,7 +140,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             var btnCancel = new Button
             {
                 Text = "取消 (Cancel)",
-                Location = new Point(280, 430),
+                Location = new Point(280, 465),
                 Size = new Size(100, 36),
                 DialogResult = DialogResult.Cancel
             };
@@ -163,6 +167,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             chkUseVirtual.Checked = _config.Opc.UseVirtualSimulator;
             txtOpcEndpoint.Text = _config.Opc.EndpointUrl;
             chkOpcSecurity.Checked = _config.Opc.UseSecurity;
+            txtRecipeDir.Text = _config.Opc.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -179,6 +184,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             _config.Opc.UseVirtualSimulator = chkUseVirtual.Checked;
             _config.Opc.EndpointUrl = txtOpcEndpoint.Text.Trim();
             _config.Opc.UseSecurity = chkOpcSecurity.Checked;
+            _config.Opc.RecipeDirectory = txtRecipeDir.Text.Trim();
 
             ConfigHelper.SaveConfig(_config);
             Close();

@@ -36,6 +36,7 @@ namespace MitsubishiLaserMES.Core.Models.Config
         public ushort MinimumCertificateKeySize { get; set; } = 1024;
         public bool RejectSha1SignedCertificates { get; set; } = false;
         public bool AutoAcceptUntrustedCertificates { get; set; } = true;
+        public string RecipeDirectory { get; set; } = @"c:\uPOL\muti-laser\";
         public int WatchdogIntervalSec { get; set; } = 1;
         public int PollingIntervalMs { get; set; } = 1000;
     }

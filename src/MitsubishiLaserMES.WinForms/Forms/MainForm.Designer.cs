@@ -80,6 +80,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.txtCompletedQty = new System.Windows.Forms.TextBox();
             this.lblRecipeId = new System.Windows.Forms.Label();
             this.txtRecipeId = new System.Windows.Forms.TextBox();
+            this.lblConditionFile = new System.Windows.Forms.Label();
+            this.txtConditionFile = new System.Windows.Forms.TextBox();
             this.lblIsTrackedIn = new System.Windows.Forms.Label();
             this.txtIsTrackedIn = new System.Windows.Forms.TextBox();
             this.lblComponentNo = new System.Windows.Forms.Label();
@@ -368,6 +370,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOrderInfo.Controls.Add(this.txtCompletedQty);
             this.grpOrderInfo.Controls.Add(this.lblRecipeId);
             this.grpOrderInfo.Controls.Add(this.txtRecipeId);
+            this.grpOrderInfo.Controls.Add(this.lblConditionFile);
+            this.grpOrderInfo.Controls.Add(this.txtConditionFile);
             this.grpOrderInfo.Controls.Add(this.lblIsTrackedIn);
             this.grpOrderInfo.Controls.Add(this.txtIsTrackedIn);
             this.grpOrderInfo.Controls.Add(this.lblComponentNo);
@@ -486,14 +490,26 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             this.txtRecipeId.Location = new System.Drawing.Point(95, 172);
             this.txtRecipeId.Name = "txtRecipeId";
-            this.txtRecipeId.Size = new System.Drawing.Size(430, 23);
+            this.txtRecipeId.Size = new System.Drawing.Size(160, 23);
             this.txtRecipeId.TabIndex = 17;
+
+            this.lblConditionFile.AutoSize = true;
+            this.lblConditionFile.Location = new System.Drawing.Point(275, 175);
+            this.lblConditionFile.Name = "lblConditionFile";
+            this.lblConditionFile.Size = new System.Drawing.Size(65, 17);
+            this.lblConditionFile.TabIndex = 18;
+            this.lblConditionFile.Text = "條件檔名 :";
+
+            this.txtConditionFile.Location = new System.Drawing.Point(365, 172);
+            this.txtConditionFile.Name = "txtConditionFile";
+            this.txtConditionFile.Size = new System.Drawing.Size(160, 23);
+            this.txtConditionFile.TabIndex = 19;
 
             this.lblIsTrackedIn.AutoSize = true;
             this.lblIsTrackedIn.Location = new System.Drawing.Point(15, 203);
             this.lblIsTrackedIn.Name = "lblIsTrackedIn";
             this.lblIsTrackedIn.Size = new System.Drawing.Size(77, 17);
-            this.lblIsTrackedIn.TabIndex = 18;
+            this.lblIsTrackedIn.TabIndex = 20;
             this.lblIsTrackedIn.Text = "是否已進站 :";
 
             this.txtIsTrackedIn.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -501,19 +517,19 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.txtIsTrackedIn.Name = "txtIsTrackedIn";
             this.txtIsTrackedIn.ReadOnly = true;
             this.txtIsTrackedIn.Size = new System.Drawing.Size(160, 23);
-            this.txtIsTrackedIn.TabIndex = 19;
+            this.txtIsTrackedIn.TabIndex = 21;
 
             this.lblComponentNo.AutoSize = true;
             this.lblComponentNo.Location = new System.Drawing.Point(265, 203);
             this.lblComponentNo.Name = "lblComponentNo";
             this.lblComponentNo.Size = new System.Drawing.Size(97, 17);
-            this.lblComponentNo.TabIndex = 20;
+            this.lblComponentNo.TabIndex = 22;
             this.lblComponentNo.Text = "ComponentNo :";
 
             this.txtComponentNo.Location = new System.Drawing.Point(365, 200);
             this.txtComponentNo.Name = "txtComponentNo";
             this.txtComponentNo.Size = new System.Drawing.Size(160, 23);
-            this.txtComponentNo.TabIndex = 21;
+            this.txtComponentNo.TabIndex = 23;
 
             // --- grpTrackedInList ---
             this.grpTrackedInList.Controls.Add(this.dgvTrackedIn);
@@ -1053,6 +1069,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.TextBox txtCompletedQty;
         private System.Windows.Forms.Label lblRecipeId;
         private System.Windows.Forms.TextBox txtRecipeId;
+        private System.Windows.Forms.Label lblConditionFile;
+        private System.Windows.Forms.TextBox txtConditionFile;
         private System.Windows.Forms.Label lblIsTrackedIn;
         private System.Windows.Forms.TextBox txtIsTrackedIn;
         private System.Windows.Forms.Label lblComponentNo;

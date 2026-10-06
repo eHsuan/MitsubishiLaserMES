@@ -31,6 +31,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         public bool IsTrackedIn => CurrentOrder != null;
         public TrackedInOrderInfo CurrentOrder { get; private set; }
         public IReadOnlyList<TrackedInOrderInfo> TrackedInOrders => _trackedInOrders.AsReadOnly();
+        public Func<string> ManualConditionFileProvider { get; set; }
 
         public event Action<string, string> OperatorLoggedIn;
         public event Action OperatorLoggedOut;
@@ -566,7 +567,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 switch (cmd.RemoteCMDType)
                 {
                     case RemoteCommandType.PP_SELECT:
-                        if (string.IsNullOrWhiteSpace(cmd.RecipeID))
+                        string rawRecipe = cmd.RecipeID?.Trim() ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(rawRecipe))
                         {
                             reply.RtnResult = RtnResult.FAIL;
                             reply.RtnMsg = "RecipeID is empty";
@@ -578,14 +580,26 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         }
                         else
                         {
+                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
+                            string fullProgramPath = CombineRecipePath(recipeDir, rawRecipe);
+
+                            string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
+                            string fullConditionPath = "*****";
+                            if (!string.IsNullOrWhiteSpace(manualCnd) && manualCnd != "*****")
+                            {
+                                fullConditionPath = CombineRecipePath(recipeDir, manualCnd);
+                            }
+
                             short sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 Recipe: {cmd.RecipeID} (片數: {sheetCount}) 至雷射機...");
-                            bool success = await OpcService.DeliverRecipeAsync(cmd.RecipeID, sheetCount).ConfigureAwait(false);
+                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 ProgramFile: {fullProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
+                            _logger.Info("DeliverRecipe", $"準備交握機台配方: ProgramFile={fullProgramPath}, ConditionFile={fullConditionPath}, SheetNum={sheetCount}");
+
+                            bool success = await OpcService.DeliverRecipeAsync(fullProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
                             if (success)
                             {
                                 reply.RtnResult = RtnResult.PASS;
                                 reply.RtnMsg = $"Recipe {cmd.RecipeID} delivered and acknowledged successfully";
-                                SystemLogMessage?.Invoke($"[配方切換交握成功] 雷射機已確認切換至 Recipe: {cmd.RecipeID}");
+                                SystemLogMessage?.Invoke($"[配方切換交握成功] 雷射機已確認切換至 ProgramFile: {fullProgramPath}, ConditionFile: {fullConditionPath}");
 
                                 if (CurrentOrder != null)
                                 {
@@ -649,6 +663,14 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         private void OnTimeCalibrationReceived(string serverDate)
         {
             SystemLogMessage?.Invoke($"[EAP 時間校正] 收到標準時間: {serverDate}");
+        }
+
+        private static string CombineRecipePath(string baseDir, string fileOrPath)
+        {
+            if (string.IsNullOrWhiteSpace(fileOrPath)) return string.Empty;
+            if (System.IO.Path.IsPathRooted(fileOrPath)) return fileOrPath;
+            if (string.IsNullOrWhiteSpace(baseDir)) return fileOrPath;
+            return System.IO.Path.Combine(baseDir, fileOrPath);
         }
 
         #endregion

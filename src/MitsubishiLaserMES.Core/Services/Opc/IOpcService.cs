@@ -27,6 +27,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         Task<bool> ConnectAsync(CancellationToken cancellationToken = default);
         Task DisconnectAsync();
         Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default);
+        Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default);
         Task<bool> StartScheduleAsync(CancellationToken cancellationToken = default);
         Task<bool> StopScheduleAsync(CancellationToken cancellationToken = default);
         Task<bool> ChangeOperatingModeAsync(short mode, CancellationToken cancellationToken = default);
