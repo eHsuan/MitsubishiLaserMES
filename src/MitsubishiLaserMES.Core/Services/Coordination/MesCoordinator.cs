@@ -32,6 +32,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         public TrackedInOrderInfo CurrentOrder { get; private set; }
         public IReadOnlyList<TrackedInOrderInfo> TrackedInOrders => _trackedInOrders.AsReadOnly();
         public Func<string> ManualConditionFileProvider { get; set; }
+        public Func<string> ManualProgramPathProvider { get; set; }
 
         public event Action<string, string> OperatorLoggedIn;
         public event Action OperatorLoggedOut;
@@ -567,13 +568,34 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 switch (cmd.RemoteCMDType)
                 {
                     case RemoteCommandType.PP_SELECT:
-                        string rawRecipe = cmd.RecipeID?.Trim() ?? string.Empty;
-                        if (string.IsNullOrWhiteSpace(rawRecipe))
+                        string manualProgram = ManualProgramPathProvider?.Invoke()?.Trim();
+                        string targetProgramPath;
+                        string effectiveRecipeName;
+
+                        if (!string.IsNullOrWhiteSpace(manualProgram))
                         {
-                            reply.RtnResult = RtnResult.FAIL;
-                            reply.RtnMsg = "RecipeID is empty";
+                            // 使用者在畫面輸入了手動加工程式路徑，優先以此取代 MES 帶下來之 Recipe
+                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
+                            targetProgramPath = CombineRecipePath(recipeDir, manualProgram);
+                            effectiveRecipeName = System.IO.Path.GetFileName(manualProgram);
+                            _logger.Info("PP_SELECT", $"[手動覆蓋] 偵測到手動指定加工程式路徑: '{manualProgram}' (解析完整路徑: '{targetProgramPath}')，取代 MES 下發之 Recipe: '{cmd.RecipeID}'");
+                            SystemLogMessage?.Invoke($"[手動覆蓋] PP_SELECT 優先採用手動指定加工程式: {targetProgramPath} (原 MES Recipe: {cmd.RecipeID})");
                         }
-                        else if (!OpcService.IsConnected)
+                        else
+                        {
+                            string rawRecipe = cmd.RecipeID?.Trim() ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(rawRecipe))
+                            {
+                                reply.RtnResult = RtnResult.FAIL;
+                                reply.RtnMsg = "RecipeID is empty";
+                                break;
+                            }
+                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
+                            targetProgramPath = CombineRecipePath(recipeDir, rawRecipe);
+                            effectiveRecipeName = rawRecipe;
+                        }
+
+                        if (!OpcService.IsConnected)
                         {
                             reply.RtnResult = RtnResult.FAIL;
                             reply.RtnMsg = "OPC UA is disconnected, cannot deliver recipe to laser machine";
@@ -581,8 +603,6 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         else
                         {
                             string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
-                            string fullProgramPath = CombineRecipePath(recipeDir, rawRecipe);
-
                             string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
                             string fullConditionPath = "*****";
                             if (!string.IsNullOrWhiteSpace(manualCnd) && manualCnd != "*****")
@@ -591,25 +611,25 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                             }
 
                             short sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 ProgramFile: {fullProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
-                            _logger.Info("DeliverRecipe", $"準備交握機台配方: ProgramFile={fullProgramPath}, ConditionFile={fullConditionPath}, SheetNum={sheetCount}");
+                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 ProgramFile: {targetProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
+                            _logger.Info("DeliverRecipe", $"準備交握機台配方: ProgramFile={targetProgramPath}, ConditionFile={fullConditionPath}, SheetNum={sheetCount}");
 
-                            bool success = await OpcService.DeliverRecipeAsync(fullProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
+                            bool success = await OpcService.DeliverRecipeAsync(targetProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
                             if (success)
                             {
                                 reply.RtnResult = RtnResult.PASS;
-                                reply.RtnMsg = $"Recipe {cmd.RecipeID} delivered and acknowledged successfully";
-                                SystemLogMessage?.Invoke($"[配方切換交握成功] 雷射機已確認切換至 ProgramFile: {fullProgramPath}, ConditionFile: {fullConditionPath}");
+                                reply.RtnMsg = $"Recipe {effectiveRecipeName} delivered and acknowledged successfully";
+                                SystemLogMessage?.Invoke($"[配方切換交握成功] 雷射機已確認切換至 ProgramFile: {targetProgramPath}, ConditionFile: {fullConditionPath}");
 
                                 if (CurrentOrder != null)
                                 {
-                                    CurrentOrder.RecipeId = cmd.RecipeID;
+                                    CurrentOrder.RecipeId = effectiveRecipeName;
                                 }
                             }
                             else
                             {
                                 reply.RtnResult = RtnResult.FAIL;
-                                reply.RtnMsg = $"DeliverRecipe failed or timed out for Recipe: {cmd.RecipeID}";
+                                reply.RtnMsg = $"DeliverRecipe failed or timed out for Program: {targetProgramPath}";
                                 SystemLogMessage?.Invoke($"[配方切換交握失敗] 雷射機配方切換失敗或逾時！");
                             }
                         }

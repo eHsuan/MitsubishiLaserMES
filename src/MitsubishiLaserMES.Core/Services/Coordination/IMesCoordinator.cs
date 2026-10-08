@@ -34,6 +34,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         TrackedInOrderInfo CurrentOrder { get; }
         IReadOnlyList<TrackedInOrderInfo> TrackedInOrders { get; }
         Func<string> ManualConditionFileProvider { get; set; }
+        Func<string> ManualProgramPathProvider { get; set; }
 
         event Action<string, string> OperatorLoggedIn; // id, name
         event Action OperatorLoggedOut;

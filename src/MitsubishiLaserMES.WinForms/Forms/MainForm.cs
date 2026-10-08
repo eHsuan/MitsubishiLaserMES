@@ -179,6 +179,39 @@ namespace MitsubishiLaserMES.WinForms.Forms
         {
             // 綁定人工輸入的加工條件檔名提供者
             _coordinator.ManualConditionFileProvider = () => txtConditionFile.Text.Trim();
+            // 綁定手動輸入的加工程式完整路徑提供者 (若非空值，PP_SELECT 時優先取代 MES Recipe)
+            _coordinator.ManualProgramPathProvider = () => txtManualProgramPath.Text.Trim();
+
+            // 瀏覽加工程式檔案
+            btnBrowseProgramPath.Click += (s, e) =>
+            {
+                using var ofd = new OpenFileDialog
+                {
+                    Title = "請選擇手動加工程式檔案",
+                    Filter = "NC 程式或所有檔案 (*.nc;*.prg;*.txt;*.*)|*.nc;*.prg;*.txt;*.*|所有檔案 (*.*)|*.*",
+                    CheckFileExists = true
+                };
+                if (!string.IsNullOrWhiteSpace(txtManualProgramPath.Text) && System.IO.File.Exists(txtManualProgramPath.Text))
+                {
+                    ofd.InitialDirectory = System.IO.Path.GetDirectoryName(txtManualProgramPath.Text);
+                    ofd.FileName = System.IO.Path.GetFileName(txtManualProgramPath.Text);
+                }
+                else if (!string.IsNullOrWhiteSpace(_config.Opc?.RecipeDirectory) && System.IO.Directory.Exists(_config.Opc.RecipeDirectory))
+                {
+                    ofd.InitialDirectory = _config.Opc.RecipeDirectory;
+                }
+
+                if (ofd.ShowDialog(this) == DialogResult.OK)
+                {
+                    txtManualProgramPath.Text = ofd.FileName;
+                }
+            };
+
+            // 清除手動加工程式路徑
+            btnClearProgramPath.Click += (s, e) =>
+            {
+                txtManualProgramPath.Clear();
+            };
 
             this.Load += async (s, e) =>
             {
@@ -678,6 +711,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 btnRemoveTrackedIn.Text = "Remove Order";
                 tsmiRemoveTrackedIn.Text = "Force Remove Order (Untrack)";
                 grpTrackedInList.Text = "Tracked-in Orders";
+                lblManualProgramPath.Text = "Manual Program Path :";
+                btnBrowseProgramPath.Text = "Browse...";
+                btnClearProgramPath.Text = "Clear";
             }
             else
             {
@@ -697,6 +733,9 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 btnRemoveTrackedIn.Text = "移除選取工單";
                 tsmiRemoveTrackedIn.Text = "強制移除此工單(解除進站)";
                 grpTrackedInList.Text = "已進站工單清單";
+                lblManualProgramPath.Text = "手動加工程式路徑 :";
+                btnBrowseProgramPath.Text = "瀏覽...";
+                btnClearProgramPath.Text = "清除";
             }
         }
 

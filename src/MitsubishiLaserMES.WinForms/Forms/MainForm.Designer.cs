@@ -116,6 +116,10 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnModeAuto = new System.Windows.Forms.Button();
             this.btnStartSchedule = new System.Windows.Forms.Button();
             this.btnOpenSimulator = new System.Windows.Forms.Button();
+            this.lblManualProgramPath = new System.Windows.Forms.Label();
+            this.txtManualProgramPath = new System.Windows.Forms.TextBox();
+            this.btnBrowseProgramPath = new System.Windows.Forms.Button();
+            this.btnClearProgramPath = new System.Windows.Forms.Button();
 
             this.grpAlarmList = new System.Windows.Forms.GroupBox();
             this.dgvAlarms = new System.Windows.Forms.DataGridView();
@@ -646,6 +650,10 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOpcStatus.Controls.Add(this.btnModeAuto);
             this.grpOpcStatus.Controls.Add(this.btnStartSchedule);
             this.grpOpcStatus.Controls.Add(this.btnOpenSimulator);
+            this.grpOpcStatus.Controls.Add(this.lblManualProgramPath);
+            this.grpOpcStatus.Controls.Add(this.txtManualProgramPath);
+            this.grpOpcStatus.Controls.Add(this.btnBrowseProgramPath);
+            this.grpOpcStatus.Controls.Add(this.btnClearProgramPath);
             this.grpOpcStatus.Location = new System.Drawing.Point(10, 245);
             this.grpOpcStatus.Name = "grpOpcStatus";
             this.grpOpcStatus.Size = new System.Drawing.Size(935, 220);
@@ -763,6 +771,44 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnStartSchedule.TabIndex = 13;
             this.btnStartSchedule.Text = "啟動連續運轉";
             this.btnStartSchedule.UseVisualStyleBackColor = false;
+
+            // 
+            // lblManualProgramPath
+            // 
+            this.lblManualProgramPath.AutoSize = true;
+            this.lblManualProgramPath.Location = new System.Drawing.Point(20, 172);
+            this.lblManualProgramPath.Name = "lblManualProgramPath";
+            this.lblManualProgramPath.Size = new System.Drawing.Size(145, 17);
+            this.lblManualProgramPath.TabIndex = 15;
+            this.lblManualProgramPath.Text = "手動加工程式路徑 :";
+
+            // 
+            // txtManualProgramPath
+            // 
+            this.txtManualProgramPath.Location = new System.Drawing.Point(170, 169);
+            this.txtManualProgramPath.Name = "txtManualProgramPath";
+            this.txtManualProgramPath.Size = new System.Drawing.Size(560, 23);
+            this.txtManualProgramPath.TabIndex = 16;
+
+            // 
+            // btnBrowseProgramPath
+            // 
+            this.btnBrowseProgramPath.Location = new System.Drawing.Point(740, 167);
+            this.btnBrowseProgramPath.Name = "btnBrowseProgramPath";
+            this.btnBrowseProgramPath.Size = new System.Drawing.Size(80, 27);
+            this.btnBrowseProgramPath.TabIndex = 17;
+            this.btnBrowseProgramPath.Text = "瀏覽...";
+            this.btnBrowseProgramPath.UseVisualStyleBackColor = true;
+
+            // 
+            // btnClearProgramPath
+            // 
+            this.btnClearProgramPath.Location = new System.Drawing.Point(830, 167);
+            this.btnClearProgramPath.Name = "btnClearProgramPath";
+            this.btnClearProgramPath.Size = new System.Drawing.Size(80, 27);
+            this.btnClearProgramPath.TabIndex = 18;
+            this.btnClearProgramPath.Text = "清除";
+            this.btnClearProgramPath.UseVisualStyleBackColor = true;
 
             // ================= tabEquipment =================
             this.tabEquipment.Controls.Add(this.grpAlarmList);
@@ -1104,6 +1150,10 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.Button btnModeAuto;
         private System.Windows.Forms.Button btnStartSchedule;
         private System.Windows.Forms.Button btnOpenSimulator;
+        private System.Windows.Forms.Label lblManualProgramPath;
+        private System.Windows.Forms.TextBox txtManualProgramPath;
+        private System.Windows.Forms.Button btnBrowseProgramPath;
+        private System.Windows.Forms.Button btnClearProgramPath;
 
         private System.Windows.Forms.GroupBox grpAlarmList;
         private System.Windows.Forms.DataGridView dgvAlarms;
