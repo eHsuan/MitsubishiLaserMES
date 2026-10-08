@@ -181,6 +181,22 @@ namespace MitsubishiLaserMES.WinForms.Forms
             _coordinator.ManualConditionFileProvider = () => txtConditionFile.Text.Trim();
             // 綁定手動輸入的加工程式完整路徑提供者 (若非空值，PP_SELECT 時優先取代 MES Recipe)
             _coordinator.ManualProgramPathProvider = () => txtManualProgramPath.Text.Trim();
+            // 綁定 IT 測試配方提供者 (若勾選啟用，機台請求配方時最高優先使用)
+            _coordinator.TestRecipeProvider = () =>
+            {
+                bool enabled = chkEnableTestRecipe.Checked;
+                string prg = txtTestPrg.Text.Trim();
+                string cnd = txtTestCnd.Text.Trim();
+                short sheets = (short)nudTestSheet.Value;
+                return (enabled, prg, cnd, sheets);
+            };
+
+            // 機台請求配方時更新 IT 測試狀態顯示
+            _coordinator.OpcService.RecipeRequestedByMachine += lotId => SafeInvoke(() =>
+            {
+                lblTestHandshakeStatus.Text = _isEnglish ? $"Status: Machine Requested (Lot: {lotId})" : $"交握狀態: 機台請求中 (批號: {lotId})";
+                lblTestHandshakeStatus.ForeColor = Color.DarkBlue;
+            });
 
             // 瀏覽加工程式檔案
             btnBrowseProgramPath.Click += (s, e) =>
@@ -380,6 +396,76 @@ namespace MitsubishiLaserMES.WinForms.Forms
             };
 
             btnClearLogs.Click += (s, e) => dgvMqttLogs.Rows.Clear();
+
+            // IT 配方交握測試
+            btnBrowseTestPrg.Click += (s, e) =>
+            {
+                using var ofd = new OpenFileDialog
+                {
+                    Title = "請選擇 IT 測試加工程式檔案",
+                    Filter = "NC 程式或所有檔案 (*.nc;*.prg;*.txt;*.*)|*.nc;*.prg;*.txt;*.*|所有檔案 (*.*)|*.*",
+                    CheckFileExists = true
+                };
+                if (!string.IsNullOrWhiteSpace(txtTestPrg.Text) && System.IO.File.Exists(txtTestPrg.Text))
+                {
+                    ofd.InitialDirectory = System.IO.Path.GetDirectoryName(txtTestPrg.Text);
+                    ofd.FileName = System.IO.Path.GetFileName(txtTestPrg.Text);
+                }
+                else if (!string.IsNullOrWhiteSpace(_config.Opc?.RecipeDirectory) && System.IO.Directory.Exists(_config.Opc.RecipeDirectory))
+                {
+                    ofd.InitialDirectory = _config.Opc.RecipeDirectory;
+                }
+
+                if (ofd.ShowDialog(this) == DialogResult.OK)
+                {
+                    txtTestPrg.Text = System.IO.Path.GetFileName(ofd.FileName);
+                }
+            };
+
+            btnClearTestRecipe.Click += (s, e) =>
+            {
+                txtTestPrg.Text = "5PCS_MHUN12AD01SG1-A-A0";
+                txtTestCnd.Text = "*****";
+                nudTestSheet.Value = 5;
+                chkEnableTestRecipe.Checked = false;
+                lblTestHandshakeStatus.Text = _isEnglish ? "Status: Standby (Waiting Req)" : "交握狀態: 待命中 (等待 Req)";
+                lblTestHandshakeStatus.ForeColor = Color.DarkSlateBlue;
+            };
+
+            btnTriggerHandshakeNow.Click += async (s, e) =>
+            {
+                if (!_coordinator.OpcService.IsConnected)
+                {
+                    MessageBox.Show(this, "OPC 尚未連線，無法執行配方交握！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string prg = txtTestPrg.Text.Trim();
+                if (string.IsNullOrWhiteSpace(prg))
+                {
+                    MessageBox.Show(this, "請輸入測試加工程式檔名或路徑！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                string cnd = txtTestCnd.Text.Trim();
+                short sheets = (short)nudTestSheet.Value;
+
+                lblTestHandshakeStatus.Text = _isEnglish ? "Status: Handshaking..." : "交握狀態: 交握執行中...";
+                lblTestHandshakeStatus.ForeColor = Color.DarkGoldenrod;
+
+                bool ok = await _coordinator.TriggerManualRecipeHandshakeAsync(prg, cnd, sheets);
+                if (ok)
+                {
+                    lblTestHandshakeStatus.Text = _isEnglish ? "Status: Handshake OK (Ack=0 reset)" : "交握狀態: 交握成功 (已復歸 Ack=0)";
+                    lblTestHandshakeStatus.ForeColor = Color.DarkGreen;
+                    SetResult("PASS", "200", $"測試配方手動交握成功: {prg}");
+                }
+                else
+                {
+                    lblTestHandshakeStatus.Text = _isEnglish ? "Status: Handshake Failed/Timeout" : "交握狀態: 交握失敗或逾時";
+                    lblTestHandshakeStatus.ForeColor = Color.DarkRed;
+                    SetResult("FAIL", "500", $"測試配方手動交握失敗或逾時: {prg}");
+                }
+            };
         }
 
         private async Task DoUserAuthAsync()
@@ -714,6 +800,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 lblManualProgramPath.Text = "Manual Program Path :";
                 btnBrowseProgramPath.Text = "Browse...";
                 btnClearProgramPath.Text = "Clear";
+                grpRecipeTest.Text = "Laser Recipe Handshake Testing (GetRecipe.Req)";
+                chkEnableTestRecipe.Text = "Enable Test Recipe Override (Prioritized on Machine GetRecipe.Req)";
+                btnTriggerHandshakeNow.Text = "Send Handshake Now";
+                btnClearTestRecipe.Text = "Clear";
+                lblTestHandshakeStatus.Text = "Status: Standby (Waiting Req)";
+                lblTestPrg.Text = "Program Name/Path:";
+                btnBrowseTestPrg.Text = "Browse...";
+                lblTestCnd.Text = "Condition File:";
+                lblTestSheet.Text = "Sheet Num:";
             }
             else
             {
@@ -736,6 +831,15 @@ namespace MitsubishiLaserMES.WinForms.Forms
                 lblManualProgramPath.Text = "手動加工程式路徑 :";
                 btnBrowseProgramPath.Text = "瀏覽...";
                 btnClearProgramPath.Text = "清除";
+                grpRecipeTest.Text = "雷射機原廠配方交握測試 (GetRecipe.Req 響應測試)";
+                chkEnableTestRecipe.Text = "啟用測試配方覆蓋 (當收到機台 GetRecipe.Req 時優先使用以下設定交握)";
+                btnTriggerHandshakeNow.Text = "立即手動發送交握";
+                btnClearTestRecipe.Text = "清除設定";
+                lblTestHandshakeStatus.Text = "交握狀態: 待命中 (等待 Req)";
+                lblTestPrg.Text = "程式檔名/路徑:";
+                btnBrowseTestPrg.Text = "瀏覽...";
+                lblTestCnd.Text = "加工條件檔:";
+                lblTestSheet.Text = "加工片數:";
             }
         }
 

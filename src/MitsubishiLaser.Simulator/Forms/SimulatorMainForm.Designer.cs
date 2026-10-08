@@ -40,6 +40,7 @@ namespace MitsubishiLaser.Simulator.Forms
             this.lblLotInput = new System.Windows.Forms.Label();
             this.txtLotInput = new System.Windows.Forms.TextBox();
             this.btnInputLot = new System.Windows.Forms.Button();
+            this.btnTriggerGetRecipeReq = new System.Windows.Forms.Button();
             this.lblGetRecipeReq = new System.Windows.Forms.Label();
             this.lblReqPrg = new System.Windows.Forms.Label();
             this.txtReqPrg = new System.Windows.Forms.TextBox();
@@ -232,6 +233,7 @@ namespace MitsubishiLaser.Simulator.Forms
             this.grpRecipe.Controls.Add(this.lblLotInput);
             this.grpRecipe.Controls.Add(this.txtLotInput);
             this.grpRecipe.Controls.Add(this.btnInputLot);
+            this.grpRecipe.Controls.Add(this.btnTriggerGetRecipeReq);
             this.grpRecipe.Controls.Add(this.lblGetRecipeReq);
             this.grpRecipe.Controls.Add(this.lblReqPrg);
             this.grpRecipe.Controls.Add(this.txtReqPrg);
@@ -255,20 +257,29 @@ namespace MitsubishiLaser.Simulator.Forms
             this.lblLotInput.TabIndex = 0;
             this.lblLotInput.Text = "批號 (LotID):";
 
-            this.txtLotInput.Location = new System.Drawing.Point(95, 27);
+            this.txtLotInput.Location = new System.Drawing.Point(95, 26);
             this.txtLotInput.Name = "txtLotInput";
-            this.txtLotInput.Size = new System.Drawing.Size(200, 23);
+            this.txtLotInput.Size = new System.Drawing.Size(140, 23);
             this.txtLotInput.TabIndex = 1;
             this.txtLotInput.Text = "LOT20260916-01";
 
             this.btnInputLot.BackColor = System.Drawing.Color.LightSteelBlue;
             this.btnInputLot.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
-            this.btnInputLot.Location = new System.Drawing.Point(310, 24);
+            this.btnInputLot.Location = new System.Drawing.Point(245, 23);
             this.btnInputLot.Name = "btnInputLot";
-            this.btnInputLot.Size = new System.Drawing.Size(230, 30);
+            this.btnInputLot.Size = new System.Drawing.Size(140, 29);
             this.btnInputLot.TabIndex = 2;
-            this.btnInputLot.Text = "模擬操作員刷入 (發出 GetRecipe.Req)";
+            this.btnInputLot.Text = "模擬操作員刷入";
             this.btnInputLot.UseVisualStyleBackColor = false;
+
+            this.btnTriggerGetRecipeReq.BackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnTriggerGetRecipeReq.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.btnTriggerGetRecipeReq.Location = new System.Drawing.Point(395, 23);
+            this.btnTriggerGetRecipeReq.Name = "btnTriggerGetRecipeReq";
+            this.btnTriggerGetRecipeReq.Size = new System.Drawing.Size(145, 29);
+            this.btnTriggerGetRecipeReq.TabIndex = 3;
+            this.btnTriggerGetRecipeReq.Text = "發出 GetRecipe.Req";
+            this.btnTriggerGetRecipeReq.UseVisualStyleBackColor = false;
 
             this.lblGetRecipeReq.AutoSize = true;
             this.lblGetRecipeReq.Font = new System.Drawing.Font("微軟正黑體", 9.5F, System.Drawing.FontStyle.Bold);
@@ -626,6 +637,7 @@ namespace MitsubishiLaser.Simulator.Forms
         private System.Windows.Forms.Label lblLotInput;
         private System.Windows.Forms.TextBox txtLotInput;
         private System.Windows.Forms.Button btnInputLot;
+        private System.Windows.Forms.Button btnTriggerGetRecipeReq;
         private System.Windows.Forms.Label lblGetRecipeReq;
         private System.Windows.Forms.Label lblReqPrg;
         private System.Windows.Forms.TextBox txtReqPrg;

@@ -47,6 +47,7 @@ namespace MitsubishiLaserMES.Core.Simulator
         event Action<string> LogEmitted;
 
         void OperatorInputLot(string lotId);
+        void TriggerGetRecipeRequest(string lotId = null);
         bool TriggerAlarm(long alarmNo, string message, string type = "A");
         void ResetAlarm(int slotIndex = -1);
         bool StartSchedule();

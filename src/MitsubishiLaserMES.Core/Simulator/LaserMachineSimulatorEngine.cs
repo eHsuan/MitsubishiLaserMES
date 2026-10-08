@@ -105,6 +105,21 @@ namespace MitsubishiLaserMES.Core.Simulator
             }
         }
 
+        public void TriggerGetRecipeRequest(string lotId = null)
+        {
+            lock (_lock)
+            {
+                string effectiveLot = !string.IsNullOrWhiteSpace(lotId)
+                    ? lotId.Trim()
+                    : (!string.IsNullOrWhiteSpace(RemoteLotId) ? RemoteLotId : "LOT-" + DateTime.Now.ToString("MMdd-HHmmss"));
+                RemoteLotId = effectiveLot;
+                GetRecipeRequest = true;
+                GetRecipeAck = 0;
+                Log($"[機台發出請求] 模擬機台發出 GetRecipe.Req = true (LotID: {effectiveLot})，等待上位機 (MES/Host) 依照原廠時序進行配方交握。");
+                NotifyStateChanged();
+            }
+        }
+
         public bool TriggerAlarm(long alarmNo, string message, string type = "A")
         {
             lock (_lock)

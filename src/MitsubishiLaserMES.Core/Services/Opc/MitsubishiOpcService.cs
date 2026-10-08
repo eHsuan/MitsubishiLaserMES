@@ -25,6 +25,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         private CancellationTokenSource _pollCts;
         private Task _pollTask;
         private readonly Dictionary<string, string> _activeAlarms = new Dictionary<string, string>();
+        private bool _lastGetRecipeReq = false;
 
         public bool IsConnected { get; private set; }
         public bool IsVirtual => _settings.UseVirtualSimulator;
@@ -41,6 +42,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         public event Action<MachineStatusLight, MachineStatusLight> StatusLightChanged;
         public event Action<int, int> ProcessedCountChanged;
         public event Action<string, string, bool> AlarmTriggered;
+        public event Action<string> RecipeRequestedByMachine;
         public event Action<string> LogMessage;
 
         public MitsubishiOpcService(OpcSettings settings)
@@ -127,48 +129,126 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
         public Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default)
         {
-            return DeliverRecipeAsync(recipeId, "*****", sheetCount, cancellationToken);
+            return HandshakeRecipeToMachineAsync(recipeId, "*****", sheetCount, cancellationToken);
         }
 
-        public async Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
+        public Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
         {
-            if (!IsConnected || _handshakeService == null)
+            return HandshakeRecipeToMachineAsync(programFile, conditionFile, sheetCount, cancellationToken);
+        }
+
+        public async Task<bool> HandshakeRecipeToMachineAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
+        {
+            if (!IsConnected || _client == null || _diagnosticService == null)
             {
-                LogMessage?.Invoke("[OPC] 未連線，無法下發配方。");
+                LogMessage?.Invoke("[OPC 交握失敗] 未連線，無法執行配方交握。");
                 return false;
             }
 
             try
             {
-                // 依原廠規範 P.11，未用條件檔或空值時 ConditionFile 固定帶 "*****"
-                string finalCondition = string.IsNullOrWhiteSpace(conditionFile) ? "*****" : conditionFile;
+                // 原廠規格化：ProgramFile 與 ConditionFile 僅傳純檔名或相對路徑，避免絕對路徑引發機台排程載入異常
+                string prog = NormalizeRecipeFileName(programFile);
+                string cond = string.IsNullOrWhiteSpace(conditionFile) ? "*****" : NormalizeRecipeFileName(conditionFile);
+                short sheets = sheetCount <= 0 ? (short)5 : sheetCount;
 
-                var recipe = new RecipeDefinition(
-                    recipeId: programFile,
-                    version: "1.0",
-                    programFile: programFile,
-                    conditionFile: finalCondition,
-                    sheetCount: sheetCount
-                );
+                LogMessage?.Invoke($"[OPC 配方交握開始] 依原廠時序寫入配方參數: ProgramFile='{prog}', ConditionFile='{cond}', SheetNum={sheets}");
 
-                LogMessage?.Invoke($"[OPC] 開始執行 Recipe 交握: ProgramFile={programFile}, ConditionFile={finalCondition}, SheetNum={sheetCount}");
-                var result = await _handshakeService.DeliverRecipeAsync(recipe, cancellationToken).ConfigureAwait(false);
-                if (result.Succeeded)
+                // 1. 寫入 ProgramFile
+                var pRes = await _diagnosticService.WriteAsync(LaserOpcNode.RecipeProgramFile, prog, cancellationToken).ConfigureAwait(false);
+                if (!pRes.Succeeded)
                 {
-                    LogMessage?.Invoke("[OPC] Recipe 交握成功 (Ack=1 已送出)。");
+                    LogMessage?.Invoke($"[OPC 配方交握失敗] 寫入 ProgramFile 失敗: {pRes.Error}");
+                    return false;
+                }
+
+                // 2. 寫入 ConditionFile
+                var cRes = await _diagnosticService.WriteAsync(LaserOpcNode.RecipeConditionFile, cond, cancellationToken).ConfigureAwait(false);
+                if (!cRes.Succeeded)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握失敗] 寫入 ConditionFile 失敗: {cRes.Error}");
+                    return false;
+                }
+
+                // 3. 寫入 SheetNum
+                var sRes = await _diagnosticService.WriteAsync(LaserOpcNode.RecipeSheetNum, sheets, cancellationToken).ConfigureAwait(false);
+                if (!sRes.Succeeded)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握失敗] 寫入 SheetNum 失敗: {sRes.Error}");
+                    return false;
+                }
+
+                // 4. 置位 GetRecipe.Ack = 1
+                var ackRes = await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, (short)1, cancellationToken).ConfigureAwait(false);
+                if (!ackRes.Succeeded)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握失敗] 寫入 GetRecipe.Ack=1 失敗: {ackRes.Error}");
+                    return false;
+                }
+
+                LogMessage?.Invoke("[OPC 配方交握] GetRecipe.Ack = 1 已送出，等待機台復位 GetRecipe.Req (逾時 10 秒)...");
+
+                // 5. 等待機台將 GetRecipe.Req 降為 false
+                bool machineAcked = false;
+                DateTime timeoutTime = DateTime.UtcNow.AddSeconds(10);
+                while (DateTime.UtcNow < timeoutTime && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                    var checkReq = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.GetRecipeRequest), cancellationToken).ConfigureAwait(false);
+                    if (checkReq.Succeeded && checkReq.Value != null)
+                    {
+                        if (!Convert.ToBoolean(checkReq.Value))
+                        {
+                            machineAcked = true;
+                            _lastGetRecipeReq = false;
+                            break;
+                        }
+                    }
+                }
+
+                // 6. 原廠規範重要步驟：Host 必須將 GetRecipe.Ack 清零復位 (0)
+                try
+                {
+                    await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, (short)0, cancellationToken).ConfigureAwait(false);
+                    LogMessage?.Invoke("[OPC 配方交握] Host 已成功復位 GetRecipe.Ack = 0。");
+                }
+                catch (Exception exReset)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握警告] 復位 GetRecipe.Ack=0 發生異常: {exReset.Message}");
+                }
+
+                if (machineAcked)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握成功] 機台已確認接收配方，Req 已降為 false，交握流程圓滿完成！");
                     return true;
                 }
                 else
                 {
-                    LogMessage?.Invoke($"[OPC] Recipe 交握失敗: {result.Error}");
+                    LogMessage?.Invoke($"[OPC 配方交握逾時] 等待機台 GetRecipe.Req 復歸逾時 (10s)，交握可能未被機台完全載入。");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                LogMessage?.Invoke($"[OPC] 下發配方例外: {ex.Message}");
+                LogMessage?.Invoke($"[OPC 配方交握例外] {ex.Message}");
+                try
+                {
+                    await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, (short)0, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch { }
                 return false;
             }
+        }
+
+        private static string NormalizeRecipeFileName(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return string.Empty;
+            string trimmed = filePath.Trim();
+            if (trimmed.Contains("\\") || trimmed.Contains("/"))
+            {
+                return System.IO.Path.GetFileName(trimmed);
+            }
+            return trimmed;
         }
 
         public async Task<bool> StartScheduleAsync(CancellationToken cancellationToken = default)
@@ -332,6 +412,25 @@ namespace MitsubishiLaserMES.Core.Services.Opc
             if (prgRes.Succeeded && prgRes.Value != null)
             {
                 ActiveProgramFile = prgRes.Value.ToString();
+            }
+
+            // 3.5. 檢查機台端 GetRecipe.Req (上升緣 0->1 觸發配方交握)
+            var reqRes = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.GetRecipeRequest), token).ConfigureAwait(false);
+            if (reqRes.Succeeded && reqRes.Value != null)
+            {
+                bool currentReq = Convert.ToBoolean(reqRes.Value);
+                if (currentReq && !_lastGetRecipeReq)
+                {
+                    string reqLot = string.Empty;
+                    var lotReqRes = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.RemoteLotId), token).ConfigureAwait(false);
+                    if (lotReqRes.Succeeded && lotReqRes.Value != null)
+                    {
+                        reqLot = lotReqRes.Value.ToString();
+                    }
+                    LogMessage?.Invoke($"[OPC 機台請求配方] 偵測到機台發出 GetRecipe.Req = true (LotID: '{reqLot}')，觸發配方交握程序。");
+                    RecipeRequestedByMachine?.Invoke(reqLot);
+                }
+                _lastGetRecipeReq = currentReq;
             }
 
             // 4. 檢查警報 Slot 000 ~ 009

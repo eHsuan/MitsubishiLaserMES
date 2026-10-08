@@ -31,8 +31,10 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         public bool IsTrackedIn => CurrentOrder != null;
         public TrackedInOrderInfo CurrentOrder { get; private set; }
         public IReadOnlyList<TrackedInOrderInfo> TrackedInOrders => _trackedInOrders.AsReadOnly();
+        public string StagedRecipeId { get; private set; } = string.Empty;
         public Func<string> ManualConditionFileProvider { get; set; }
         public Func<string> ManualProgramPathProvider { get; set; }
+        public Func<(bool IsEnabled, string ProgramFile, string ConditionFile, short SheetCount)> TestRecipeProvider { get; set; }
 
         public event Action<string, string> OperatorLoggedIn;
         public event Action OperatorLoggedOut;
@@ -88,6 +90,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             OpcService.ProcessedCountChanged += OnOpcProcessedCountChanged;
             OpcService.AlarmTriggered += OnOpcAlarmTriggered;
             OpcService.ConnectionStateChanged += OnOpcConnectionStateChanged;
+            OpcService.RecipeRequestedByMachine += OnRecipeRequestedByMachine;
 
             // 綁定 EAP 下行指令與遠端指令交握處理器
             EapService.RemoteCommandHandler = HandleRemoteCommandAsync;
@@ -242,11 +245,15 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                     short.TryParse(req.Qty, out qty);
                 }
 
+                string recId = !string.IsNullOrWhiteSpace(StagedRecipeId)
+                    ? StagedRecipeId
+                    : (!string.IsNullOrWhiteSpace(OpcService.ActiveProgramFile) ? OpcService.ActiveProgramFile : (CurrentOrder?.RecipeId ?? string.Empty));
+
                 var orderInfo = new TrackedInOrderInfo
                 {
                     WorkOrder = primaryWo,
                     CassetteId = primaryCst,
-                    RecipeId = !string.IsNullOrWhiteSpace(OpcService.ActiveProgramFile) ? OpcService.ActiveProgramFile : (CurrentOrder?.RecipeId ?? string.Empty),
+                    RecipeId = recId,
                     PartNo = req.MaterialID ?? string.Empty,
                     TotalQty = qty,
                     TrackInTime = DateTime.Now
@@ -257,8 +264,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 _storageService.Save(_trackedInOrders);
                 TrackInCompleted?.Invoke(orderInfo);
 
-                _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}");
-                SystemLogMessage?.Invoke($"[工單進站成功] 工單={primaryWo}, 卡匣={primaryCst}");
+                _logger.Info("TrackIn", $"工單進站成功: 工單={primaryWo}, 卡匣={primaryCst}, 記憶配方={recId}");
+                SystemLogMessage?.Invoke($"[工單進站成功] 工單={primaryWo}, 卡匣={primaryCst}, 記憶配方={recId} (等待機台 GetRecipe.Req)");
 
                 // 進站成功後依機台 OPC 模式決定是否自動啟動連續加工運轉
                 if (OpcService.IsConnected)
@@ -296,6 +303,12 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         public async Task<ReplyTrackInReqPayload> TrackInAsync(TrackInReqPayload req, CancellationToken cancellationToken = default)
         {
+            if (!string.IsNullOrWhiteSpace(req.RecipeID))
+            {
+                StagedRecipeId = req.RecipeID.Trim();
+                _logger.Info("TrackIn", $"[進站指定配方] 記錄 StagedRecipeId = {StagedRecipeId}");
+            }
+
             var msg = new TrackInReqMessage
             {
                 WorkOrder = !string.IsNullOrWhiteSpace(req.WorkOrder) ? new List<string> { req.WorkOrder } : new List<string>(),
@@ -308,6 +321,11 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             };
 
             var replyMsg = await TrackInAsync(msg, cancellationToken).ConfigureAwait(false);
+            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(StagedRecipeId))
+            {
+                CurrentOrder.RecipeId = StagedRecipeId;
+            }
+
             return new ReplyTrackInReqPayload
             {
                 TransactionID = replyMsg.TransactionID,
@@ -318,7 +336,8 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 CassetteID = replyMsg.CassetteID ?? new List<string>(),
                 UserID = replyMsg.UserID,
                 MaterialID = replyMsg.MaterialID,
-                ToolingID = replyMsg.ToolingID
+                ToolingID = replyMsg.ToolingID,
+                RecipeID = CurrentOrder?.RecipeId ?? StagedRecipeId
             };
         }
 
@@ -568,6 +587,18 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 switch (cmd.RemoteCMDType)
                 {
                     case RemoteCommandType.PP_SELECT:
+                        string rawRecipe = cmd.RecipeID?.Trim() ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(rawRecipe))
+                        {
+                            StagedRecipeId = rawRecipe;
+                            if (CurrentOrder != null)
+                            {
+                                CurrentOrder.RecipeId = rawRecipe;
+                            }
+                            _logger.Info("PP_SELECT", $"[EAP 配方下發] 已記憶 StagedRecipeId: {StagedRecipeId}");
+                            SystemLogMessage?.Invoke($"[EAP 配方下發] 收到 PP_SELECT: {StagedRecipeId} (已記憶)");
+                        }
+
                         string manualProgram = ManualProgramPathProvider?.Invoke()?.Trim();
                         string targetProgramPath;
                         string effectiveRecipeName;
@@ -575,23 +606,20 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         if (!string.IsNullOrWhiteSpace(manualProgram))
                         {
                             // 使用者在畫面輸入了手動加工程式路徑，優先以此取代 MES 帶下來之 Recipe
-                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
-                            targetProgramPath = CombineRecipePath(recipeDir, manualProgram);
+                            targetProgramPath = manualProgram;
                             effectiveRecipeName = System.IO.Path.GetFileName(manualProgram);
-                            _logger.Info("PP_SELECT", $"[手動覆蓋] 偵測到手動指定加工程式路徑: '{manualProgram}' (解析完整路徑: '{targetProgramPath}')，取代 MES 下發之 Recipe: '{cmd.RecipeID}'");
+                            _logger.Info("PP_SELECT", $"[手動覆蓋] 偵測到手動指定加工程式路徑: '{manualProgram}'，取代 MES 下發之 Recipe: '{cmd.RecipeID}'");
                             SystemLogMessage?.Invoke($"[手動覆蓋] PP_SELECT 優先採用手動指定加工程式: {targetProgramPath} (原 MES Recipe: {cmd.RecipeID})");
                         }
                         else
                         {
-                            string rawRecipe = cmd.RecipeID?.Trim() ?? string.Empty;
                             if (string.IsNullOrWhiteSpace(rawRecipe))
                             {
                                 reply.RtnResult = RtnResult.FAIL;
                                 reply.RtnMsg = "RecipeID is empty";
                                 break;
                             }
-                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
-                            targetProgramPath = CombineRecipePath(recipeDir, rawRecipe);
+                            targetProgramPath = rawRecipe;
                             effectiveRecipeName = rawRecipe;
                         }
 
@@ -602,19 +630,14 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         }
                         else
                         {
-                            string recipeDir = _config.Opc?.RecipeDirectory ?? @"c:\uPOL\muti-laser\";
                             string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
-                            string fullConditionPath = "*****";
-                            if (!string.IsNullOrWhiteSpace(manualCnd) && manualCnd != "*****")
-                            {
-                                fullConditionPath = CombineRecipePath(recipeDir, manualCnd);
-                            }
-
+                            string fullConditionPath = string.IsNullOrWhiteSpace(manualCnd) ? "*****" : manualCnd;
                             short sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                            SystemLogMessage?.Invoke($"[配方切換交握] 正在下發 ProgramFile: {targetProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
+
+                            SystemLogMessage?.Invoke($"[配方切換交握] 執行交握 ProgramFile: {targetProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
                             _logger.Info("DeliverRecipe", $"準備交握機台配方: ProgramFile={targetProgramPath}, ConditionFile={fullConditionPath}, SheetNum={sheetCount}");
 
-                            bool success = await OpcService.DeliverRecipeAsync(targetProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
+                            bool success = await OpcService.HandshakeRecipeToMachineAsync(targetProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
                             if (success)
                             {
                                 reply.RtnResult = RtnResult.PASS;
@@ -691,6 +714,142 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             if (System.IO.Path.IsPathRooted(fileOrPath)) return fileOrPath;
             if (string.IsNullOrWhiteSpace(baseDir)) return fileOrPath;
             return System.IO.Path.Combine(baseDir, fileOrPath);
+        }
+
+        private void OnRecipeRequestedByMachine(string lotId)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await ProcessMachineRecipeRequestAsync(lotId).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn("Coordinator", $"處理機台配方請求例外: {ex.Message}");
+                    SystemLogMessage?.Invoke($"[配方請求處理例外] {ex.Message}");
+                }
+            });
+        }
+
+        private async Task<bool> ProcessMachineRecipeRequestAsync(string machineLotId)
+        {
+            string targetProgram = string.Empty;
+            string targetCondition = "*****";
+            short sheetCount = 5;
+            string sourceInfo = string.Empty;
+
+            // 1. 優先權 1：IT 測試功能 (手動覆蓋)
+            var testSetting = TestRecipeProvider?.Invoke();
+            if (testSetting.HasValue && testSetting.Value.IsEnabled && !string.IsNullOrWhiteSpace(testSetting.Value.ProgramFile))
+            {
+                targetProgram = testSetting.Value.ProgramFile.Trim();
+                targetCondition = !string.IsNullOrWhiteSpace(testSetting.Value.ConditionFile) ? testSetting.Value.ConditionFile.Trim() : "*****";
+                sheetCount = testSetting.Value.SheetCount > 0 ? testSetting.Value.SheetCount : (short)5;
+                sourceInfo = "[IT 測試功能指定]";
+            }
+            // 2. 優先權 2：主畫面手動指定加工程式路徑
+            else if (!string.IsNullOrWhiteSpace(ManualProgramPathProvider?.Invoke()))
+            {
+                targetProgram = ManualProgramPathProvider.Invoke().Trim();
+                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
+                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
+                sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                sourceInfo = "[主畫面手動指定路徑]";
+            }
+            // 3. 優先權 3：工單進站或 PP_SELECT 記憶之配方 (StagedRecipeId)
+            else if (!string.IsNullOrWhiteSpace(StagedRecipeId))
+            {
+                targetProgram = StagedRecipeId.Trim();
+                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
+                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
+                sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                sourceInfo = "[進站/PP_SELECT 記憶配方]";
+            }
+            // 4. 優先權 4：當前工單中記錄之 RecipeId
+            else if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.RecipeId))
+            {
+                targetProgram = CurrentOrder.RecipeId.Trim();
+                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
+                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
+                sheetCount = CurrentOrder.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                sourceInfo = "[當前工單配方]";
+            }
+            else
+            {
+                _logger.Warn("Coordinator", $"[機台配方請求警告] 收到機台 GetRecipe.Req (LotID: '{machineLotId}')，但目前無任何已進站配方或手動程式！");
+                SystemLogMessage?.Invoke($"[機台配方請求警告] 收到機台 GetRecipe.Req (LotID: '{machineLotId}')，但目前無任何已進站配方或手動程式可供下發。");
+                return false;
+            }
+
+            _logger.Info("Coordinator", $"[響應機台配方請求] {sourceInfo} 準備與機台交握: Program='{targetProgram}', Condition='{targetCondition}', SheetCount={sheetCount}, LotID='{machineLotId}'");
+            SystemLogMessage?.Invoke($"[響應機台配方交握] {sourceInfo} 開始與機台交握: 程式='{targetProgram}', 條件='{targetCondition}', 片數={sheetCount}");
+
+            bool success = await OpcService.HandshakeRecipeToMachineAsync(targetProgram, targetCondition, sheetCount).ConfigureAwait(false);
+            if (success)
+            {
+                _logger.Info("Coordinator", $"[配方交握成功] 機台已確認接收 {sourceInfo} 配方: {targetProgram}");
+                SystemLogMessage?.Invoke($"[配方交握成功] 機台已確認接收 {sourceInfo} 配方: {targetProgram}");
+                if (CurrentOrder != null)
+                {
+                    CurrentOrder.RecipeId = System.IO.Path.GetFileName(targetProgram);
+                }
+            }
+            else
+            {
+                _logger.Warn("Coordinator", $"[配方交握未完成] 機台未能在時限內完成交握 (Program='{targetProgram}')");
+                SystemLogMessage?.Invoke($"[配方交握未完成] 機台未能在時限內完成交握 (Program='{targetProgram}')");
+            }
+
+            return success;
+        }
+
+        public async Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, CancellationToken cancellationToken = default)
+        {
+            string prog = programFile;
+            string cond = conditionFile;
+            short sheets = sheetCount;
+
+            if (string.IsNullOrWhiteSpace(prog))
+            {
+                var testSetting = TestRecipeProvider?.Invoke();
+                if (testSetting.HasValue && !string.IsNullOrWhiteSpace(testSetting.Value.ProgramFile))
+                {
+                    prog = testSetting.Value.ProgramFile;
+                    cond = testSetting.Value.ConditionFile;
+                    sheets = testSetting.Value.SheetCount;
+                }
+                else if (!string.IsNullOrWhiteSpace(ManualProgramPathProvider?.Invoke()))
+                {
+                    prog = ManualProgramPathProvider.Invoke();
+                    cond = ManualConditionFileProvider?.Invoke();
+                    sheets = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                }
+                else if (!string.IsNullOrWhiteSpace(StagedRecipeId))
+                {
+                    prog = StagedRecipeId;
+                    cond = ManualConditionFileProvider?.Invoke();
+                    sheets = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                }
+                else if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.RecipeId))
+                {
+                    prog = CurrentOrder.RecipeId;
+                    cond = ManualConditionFileProvider?.Invoke();
+                    sheets = CurrentOrder.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(prog))
+            {
+                SystemLogMessage?.Invoke("[手動發送交握失敗] 請先輸入或指定加工程式檔名/路徑！");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(cond)) cond = "*****";
+            if (sheets <= 0) sheets = 5;
+
+            SystemLogMessage?.Invoke($"[手動直接發送交握] 正在執行原廠交握: Program='{prog}', Condition='{cond}', Sheets={sheets}...");
+            return await OpcService.HandshakeRecipeToMachineAsync(prog, cond, sheets, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

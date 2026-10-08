@@ -76,6 +76,13 @@ namespace MitsubishiLaser.Simulator.Forms
                 _simulator.OperatorInputLot(lot);
             };
 
+            // 手動觸發 GetRecipe.Req 請求
+            btnTriggerGetRecipeReq.Click += (s, e) =>
+            {
+                string lot = txtLotInput.Text.Trim();
+                _simulator.TriggerGetRecipeRequest(string.IsNullOrWhiteSpace(lot) ? null : lot);
+            };
+
             // 運轉控制
             btnStartRun.Click += (s, e) => Task.Run(() => _simulator.StartSchedule());
             btnStopRun.Click += (s, e) => Task.Run(() => _simulator.StopSchedule());

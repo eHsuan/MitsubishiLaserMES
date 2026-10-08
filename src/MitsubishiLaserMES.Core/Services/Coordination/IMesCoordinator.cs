@@ -33,8 +33,10 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         bool IsTrackedIn { get; }
         TrackedInOrderInfo CurrentOrder { get; }
         IReadOnlyList<TrackedInOrderInfo> TrackedInOrders { get; }
+        string StagedRecipeId { get; }
         Func<string> ManualConditionFileProvider { get; set; }
         Func<string> ManualProgramPathProvider { get; set; }
+        Func<(bool IsEnabled, string ProgramFile, string ConditionFile, short SheetCount)> TestRecipeProvider { get; set; }
 
         event Action<string, string> OperatorLoggedIn; // id, name
         event Action OperatorLoggedOut;
@@ -53,5 +55,6 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default);
         bool RemoveTrackedInOrder(string workOrder);
         Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default);
+        Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, CancellationToken cancellationToken = default);
     }
 }

@@ -22,12 +22,14 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         event Action<MachineStatusLight, MachineStatusLight> StatusLightChanged;
         event Action<int, int> ProcessedCountChanged; // oldVal, newVal
         event Action<string, string, bool> AlarmTriggered; // code, msg, isStart
+        event Action<string> RecipeRequestedByMachine; // lotId
         event Action<string> LogMessage;
 
         Task<bool> ConnectAsync(CancellationToken cancellationToken = default);
         Task DisconnectAsync();
         Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default);
         Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default);
+        Task<bool> HandshakeRecipeToMachineAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default);
         Task<bool> StartScheduleAsync(CancellationToken cancellationToken = default);
         Task<bool> StopScheduleAsync(CancellationToken cancellationToken = default);
         Task<bool> ChangeOperatingModeAsync(short mode, CancellationToken cancellationToken = default);

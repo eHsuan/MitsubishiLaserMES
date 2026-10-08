@@ -131,6 +131,21 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.btnTestAlarmStart = new System.Windows.Forms.Button();
             this.btnTestAlarmEnd = new System.Windows.Forms.Button();
             this.btnClearLogs = new System.Windows.Forms.Button();
+
+            // 實例化配方交握測試控制項
+            this.grpRecipeTest = new System.Windows.Forms.GroupBox();
+            this.chkEnableTestRecipe = new System.Windows.Forms.CheckBox();
+            this.btnTriggerHandshakeNow = new System.Windows.Forms.Button();
+            this.btnClearTestRecipe = new System.Windows.Forms.Button();
+            this.lblTestHandshakeStatus = new System.Windows.Forms.Label();
+            this.lblTestPrg = new System.Windows.Forms.Label();
+            this.txtTestPrg = new System.Windows.Forms.TextBox();
+            this.btnBrowseTestPrg = new System.Windows.Forms.Button();
+            this.lblTestCnd = new System.Windows.Forms.Label();
+            this.txtTestCnd = new System.Windows.Forms.TextBox();
+            this.lblTestSheet = new System.Windows.Forms.Label();
+            this.nudTestSheet = new System.Windows.Forms.NumericUpDown();
+
             this.grpLog = new System.Windows.Forms.GroupBox();
             this.dgvMqttLogs = new System.Windows.Forms.DataGridView();
 
@@ -161,6 +176,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTestSheet)).BeginInit();
 
             this.grpCurrentOperator.SuspendLayout();
             this.grpAuth.SuspendLayout();
@@ -174,6 +190,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOpcStatus.SuspendLayout();
             this.grpAlarmList.SuspendLayout();
             this.grpTestActions.SuspendLayout();
+            this.grpRecipeTest.SuspendLayout();
             this.grpLog.SuspendLayout();
             this.grpResult.SuspendLayout();
             this.SuspendLayout();
@@ -860,6 +877,7 @@ namespace MitsubishiLaserMES.WinForms.Forms
 
             // ================= tabItTest =================
             this.tabItTest.Controls.Add(this.grpTestActions);
+            this.tabItTest.Controls.Add(this.grpRecipeTest);
             this.tabItTest.Controls.Add(this.grpLog);
             this.tabItTest.Location = new System.Drawing.Point(4, 26);
             this.tabItTest.Name = "tabItTest";
@@ -875,57 +893,160 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpTestActions.Controls.Add(this.btnTestAlarmStart);
             this.grpTestActions.Controls.Add(this.btnTestAlarmEnd);
             this.grpTestActions.Controls.Add(this.btnClearLogs);
-            this.grpTestActions.Location = new System.Drawing.Point(15, 15);
+            this.grpTestActions.Location = new System.Drawing.Point(15, 8);
             this.grpTestActions.Name = "grpTestActions";
-            this.grpTestActions.Size = new System.Drawing.Size(1095, 80);
+            this.grpTestActions.Size = new System.Drawing.Size(1095, 62);
             this.grpTestActions.TabIndex = 0;
             this.grpTestActions.TabStop = false;
             this.grpTestActions.Text = "MQTT 通訊測試與模擬工具";
 
-            this.btnTestAlive.Location = new System.Drawing.Point(15, 28);
+            this.btnTestAlive.Location = new System.Drawing.Point(15, 20);
             this.btnTestAlive.Name = "btnTestAlive";
-            this.btnTestAlive.Size = new System.Drawing.Size(190, 35);
+            this.btnTestAlive.Size = new System.Drawing.Size(185, 30);
             this.btnTestAlive.TabIndex = 0;
             this.btnTestAlive.Text = "測試存活檢測 (AreYouThere)";
             this.btnTestAlive.UseVisualStyleBackColor = true;
 
-            this.btnTestProcessData.Location = new System.Drawing.Point(220, 28);
+            this.btnTestProcessData.Location = new System.Drawing.Point(210, 20);
             this.btnTestProcessData.Name = "btnTestProcessData";
-            this.btnTestProcessData.Size = new System.Drawing.Size(160, 35);
+            this.btnTestProcessData.Size = new System.Drawing.Size(155, 30);
             this.btnTestProcessData.TabIndex = 1;
             this.btnTestProcessData.Text = "模擬製程資料上報";
             this.btnTestProcessData.UseVisualStyleBackColor = true;
 
-            this.btnTestAlarmStart.Location = new System.Drawing.Point(395, 28);
+            this.btnTestAlarmStart.Location = new System.Drawing.Point(375, 20);
             this.btnTestAlarmStart.Name = "btnTestAlarmStart";
-            this.btnTestAlarmStart.Size = new System.Drawing.Size(160, 35);
+            this.btnTestAlarmStart.Size = new System.Drawing.Size(155, 30);
             this.btnTestAlarmStart.TabIndex = 2;
             this.btnTestAlarmStart.Text = "模擬警報發生 (Start)";
             this.btnTestAlarmStart.UseVisualStyleBackColor = true;
 
-            this.btnTestAlarmEnd.Location = new System.Drawing.Point(570, 28);
+            this.btnTestAlarmEnd.Location = new System.Drawing.Point(540, 20);
             this.btnTestAlarmEnd.Name = "btnTestAlarmEnd";
-            this.btnTestAlarmEnd.Size = new System.Drawing.Size(160, 35);
+            this.btnTestAlarmEnd.Size = new System.Drawing.Size(155, 30);
             this.btnTestAlarmEnd.TabIndex = 3;
             this.btnTestAlarmEnd.Text = "模擬警報解除 (End)";
             this.btnTestAlarmEnd.UseVisualStyleBackColor = true;
 
-            this.btnClearLogs.Location = new System.Drawing.Point(745, 28);
+            this.btnClearLogs.Location = new System.Drawing.Point(705, 20);
             this.btnClearLogs.Name = "btnClearLogs";
-            this.btnClearLogs.Size = new System.Drawing.Size(120, 35);
+            this.btnClearLogs.Size = new System.Drawing.Size(115, 30);
             this.btnClearLogs.TabIndex = 4;
             this.btnClearLogs.Text = "清空通訊日誌";
             this.btnClearLogs.UseVisualStyleBackColor = true;
+
+            // --- grpRecipeTest ---
+            this.grpRecipeTest.Controls.Add(this.chkEnableTestRecipe);
+            this.grpRecipeTest.Controls.Add(this.btnTriggerHandshakeNow);
+            this.grpRecipeTest.Controls.Add(this.btnClearTestRecipe);
+            this.grpRecipeTest.Controls.Add(this.lblTestHandshakeStatus);
+            this.grpRecipeTest.Controls.Add(this.lblTestPrg);
+            this.grpRecipeTest.Controls.Add(this.txtTestPrg);
+            this.grpRecipeTest.Controls.Add(this.btnBrowseTestPrg);
+            this.grpRecipeTest.Controls.Add(this.lblTestCnd);
+            this.grpRecipeTest.Controls.Add(this.txtTestCnd);
+            this.grpRecipeTest.Controls.Add(this.lblTestSheet);
+            this.grpRecipeTest.Controls.Add(this.nudTestSheet);
+            this.grpRecipeTest.Location = new System.Drawing.Point(15, 74);
+            this.grpRecipeTest.Name = "grpRecipeTest";
+            this.grpRecipeTest.Size = new System.Drawing.Size(1095, 92);
+            this.grpRecipeTest.TabIndex = 1;
+            this.grpRecipeTest.TabStop = false;
+            this.grpRecipeTest.Text = "雷射機原廠配方交握測試 (GetRecipe.Req 響應測試)";
+
+            this.chkEnableTestRecipe.AutoSize = true;
+            this.chkEnableTestRecipe.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.chkEnableTestRecipe.Location = new System.Drawing.Point(15, 23);
+            this.chkEnableTestRecipe.Name = "chkEnableTestRecipe";
+            this.chkEnableTestRecipe.Size = new System.Drawing.Size(438, 20);
+            this.chkEnableTestRecipe.TabIndex = 0;
+            this.chkEnableTestRecipe.Text = "啟用測試配方覆蓋 (當收到機台 GetRecipe.Req 時優先使用以下設定交握)";
+            this.chkEnableTestRecipe.UseVisualStyleBackColor = true;
+
+            this.btnTriggerHandshakeNow.BackColor = System.Drawing.Color.LightSkyBlue;
+            this.btnTriggerHandshakeNow.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.btnTriggerHandshakeNow.Location = new System.Drawing.Point(470, 18);
+            this.btnTriggerHandshakeNow.Name = "btnTriggerHandshakeNow";
+            this.btnTriggerHandshakeNow.Size = new System.Drawing.Size(165, 28);
+            this.btnTriggerHandshakeNow.TabIndex = 1;
+            this.btnTriggerHandshakeNow.Text = "立即手動發送交握";
+            this.btnTriggerHandshakeNow.UseVisualStyleBackColor = false;
+
+            this.btnClearTestRecipe.Location = new System.Drawing.Point(645, 18);
+            this.btnClearTestRecipe.Name = "btnClearTestRecipe";
+            this.btnClearTestRecipe.Size = new System.Drawing.Size(85, 28);
+            this.btnClearTestRecipe.TabIndex = 2;
+            this.btnClearTestRecipe.Text = "清除設定";
+            this.btnClearTestRecipe.UseVisualStyleBackColor = true;
+
+            this.lblTestHandshakeStatus.AutoSize = true;
+            this.lblTestHandshakeStatus.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
+            this.lblTestHandshakeStatus.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTestHandshakeStatus.Location = new System.Drawing.Point(745, 24);
+            this.lblTestHandshakeStatus.Name = "lblTestHandshakeStatus";
+            this.lblTestHandshakeStatus.Size = new System.Drawing.Size(144, 16);
+            this.lblTestHandshakeStatus.TabIndex = 3;
+            this.lblTestHandshakeStatus.Text = "交握狀態: 待命中 (等待 Req)";
+
+            this.lblTestPrg.AutoSize = true;
+            this.lblTestPrg.Location = new System.Drawing.Point(15, 57);
+            this.lblTestPrg.Name = "lblTestPrg";
+            this.lblTestPrg.Size = new System.Drawing.Size(95, 17);
+            this.lblTestPrg.TabIndex = 4;
+            this.lblTestPrg.Text = "程式檔名/路徑:";
+
+            this.txtTestPrg.Location = new System.Drawing.Point(115, 54);
+            this.txtTestPrg.Name = "txtTestPrg";
+            this.txtTestPrg.Size = new System.Drawing.Size(260, 23);
+            this.txtTestPrg.TabIndex = 5;
+            this.txtTestPrg.Text = "5PCS_MHUN12AD01SG1-A-A0";
+
+            this.btnBrowseTestPrg.Location = new System.Drawing.Point(380, 52);
+            this.btnBrowseTestPrg.Name = "btnBrowseTestPrg";
+            this.btnBrowseTestPrg.Size = new System.Drawing.Size(65, 27);
+            this.btnBrowseTestPrg.TabIndex = 6;
+            this.btnBrowseTestPrg.Text = "瀏覽...";
+            this.btnBrowseTestPrg.UseVisualStyleBackColor = true;
+
+            this.lblTestCnd.AutoSize = true;
+            this.lblTestCnd.Location = new System.Drawing.Point(460, 57);
+            this.lblTestCnd.Name = "lblTestCnd";
+            this.lblTestCnd.Size = new System.Drawing.Size(75, 17);
+            this.lblTestCnd.TabIndex = 7;
+            this.lblTestCnd.Text = "加工條件檔:";
+
+            this.txtTestCnd.Location = new System.Drawing.Point(540, 54);
+            this.txtTestCnd.Name = "txtTestCnd";
+            this.txtTestCnd.Size = new System.Drawing.Size(120, 23);
+            this.txtTestCnd.TabIndex = 8;
+            this.txtTestCnd.Text = "*****";
+
+            this.lblTestSheet.AutoSize = true;
+            this.lblTestSheet.Location = new System.Drawing.Point(680, 57);
+            this.lblTestSheet.Name = "lblTestSheet";
+            this.lblTestSheet.Size = new System.Drawing.Size(63, 17);
+            this.lblTestSheet.TabIndex = 9;
+            this.lblTestSheet.Text = "加工片數:";
+
+            this.nudTestSheet.Location = new System.Drawing.Point(748, 54);
+            this.nudTestSheet.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
+            this.nudTestSheet.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.nudTestSheet.Name = "nudTestSheet";
+            this.nudTestSheet.Size = new System.Drawing.Size(70, 23);
+            this.nudTestSheet.TabIndex = 10;
+            this.nudTestSheet.Value = new decimal(new int[] { 5, 0, 0, 0 });
 
             // --- grpLog ---
             this.grpLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpLog.Controls.Add(this.dgvMqttLogs);
-            this.grpLog.Location = new System.Drawing.Point(15, 105);
+            this.grpLog.Location = new System.Drawing.Point(15, 172);
             this.grpLog.Name = "grpLog";
-            this.grpLog.Size = new System.Drawing.Size(1095, 360);
-            this.grpLog.TabIndex = 1;
+            this.grpLog.Size = new System.Drawing.Size(1095, 292);
+            this.grpLog.TabIndex = 2;
+            this.grpLog.TabStop = false;
+            this.grpLog.Text = "MQTT 即時封包監聽紀錄";
             this.grpLog.TabStop = false;
             this.grpLog.Text = "MQTT 即時封包監聽紀錄";
 
@@ -1037,10 +1158,11 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MES - 2026/09/16";
 
-            // EndInit DataGridViews
+            // EndInit DataGridViews & Controls
             ((System.ComponentModel.ISupportInitialize)(this.dgvTrackedIn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAlarms)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMqttLogs)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTestSheet)).EndInit();
 
             this.grpCurrentOperator.ResumeLayout(false);
             this.grpCurrentOperator.PerformLayout();
@@ -1058,6 +1180,8 @@ namespace MitsubishiLaserMES.WinForms.Forms
             this.grpOpcStatus.PerformLayout();
             this.grpAlarmList.ResumeLayout(false);
             this.grpTestActions.ResumeLayout(false);
+            this.grpRecipeTest.ResumeLayout(false);
+            this.grpRecipeTest.PerformLayout();
             this.grpLog.ResumeLayout(false);
             this.grpResult.ResumeLayout(false);
             this.grpResult.PerformLayout();
@@ -1164,6 +1288,20 @@ namespace MitsubishiLaserMES.WinForms.Forms
         private System.Windows.Forms.Button btnTestAlarmStart;
         private System.Windows.Forms.Button btnTestAlarmEnd;
         private System.Windows.Forms.Button btnClearLogs;
+
+        private System.Windows.Forms.GroupBox grpRecipeTest;
+        private System.Windows.Forms.CheckBox chkEnableTestRecipe;
+        private System.Windows.Forms.Button btnTriggerHandshakeNow;
+        private System.Windows.Forms.Button btnClearTestRecipe;
+        private System.Windows.Forms.Label lblTestHandshakeStatus;
+        private System.Windows.Forms.Label lblTestPrg;
+        private System.Windows.Forms.TextBox txtTestPrg;
+        private System.Windows.Forms.Button btnBrowseTestPrg;
+        private System.Windows.Forms.Label lblTestCnd;
+        private System.Windows.Forms.TextBox txtTestCnd;
+        private System.Windows.Forms.Label lblTestSheet;
+        private System.Windows.Forms.NumericUpDown nudTestSheet;
+
         private System.Windows.Forms.GroupBox grpLog;
         private System.Windows.Forms.DataGridView dgvMqttLogs;
 
