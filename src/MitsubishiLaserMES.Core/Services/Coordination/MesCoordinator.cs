@@ -825,32 +825,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 return false;
             }
 
-            // 檢查主畫面是否有手動指定加工程式路徑覆蓋
-            string manualProg = ManualProgramPathProvider?.Invoke()?.Trim();
-            if (!string.IsNullOrWhiteSpace(manualProg))
-            {
-                lock (_ppSelectLock)
-                {
-                    if (_pendingPpSelectTcs == ppSelectTcs) _pendingPpSelectTcs = null;
-                }
-                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
-                string cond = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
-                short sheets = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                SystemLogMessage?.Invoke($"[手動指定覆蓋] 偵測到主畫面手動指定加工程式: {manualProg}，優先執行機台交握...");
-                bool ok = await OpcService.HandshakeRecipeToMachineAsync(manualProg, cond, sheets).ConfigureAwait(false);
-                if (ok)
-                {
-                    if (CurrentOrder != null) CurrentOrder.RecipeId = System.IO.Path.GetFileName(manualProg);
-                    return true;
-                }
-                else
-                {
-                    await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
-                    return false;
-                }
-            }
-
-            // 等待上位 EAP 下發 PP_SELECT 指令 (安全逾時 25 秒)
+            // 等待上位 EAP 下發 PP_SELECT 指令並由其執行唯一一次交握 (安全逾時 25 秒)
             SystemLogMessage?.Invoke($"[機台進站成功] 工單 {lot} 進站成功，等待上位 EAP 下發 PP_SELECT 配方指令 (逾時 25 秒)...");
             var completedTask = await Task.WhenAny(ppSelectTcs.Task, Task.Delay(25000)).ConfigureAwait(false);
             if (completedTask == ppSelectTcs.Task)
