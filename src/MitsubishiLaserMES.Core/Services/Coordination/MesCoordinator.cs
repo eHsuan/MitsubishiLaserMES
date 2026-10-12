@@ -35,6 +35,9 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         public Func<string> ManualConditionFileProvider { get; set; }
         public Func<string> ManualProgramPathProvider { get; set; }
         public Func<(bool IsEnabled, string ProgramFile, string ConditionFile, short SheetCount)> TestRecipeProvider { get; set; }
+        public const string DefaultFallbackOperatorId = "999999";
+        private TaskCompletionSource<(string RecipeId, bool Succeeded)> _pendingPpSelectTcs;
+        private readonly object _ppSelectLock = new object();
 
         public event Action<string, string> OperatorLoggedIn;
         public event Action OperatorLoggedOut;
@@ -212,7 +215,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
             if (string.IsNullOrWhiteSpace(req.UserID))
             {
-                req.UserID = CurrentOperatorId;
+                req.UserID = !string.IsNullOrWhiteSpace(CurrentOperatorId) ? CurrentOperatorId : DefaultFallbackOperatorId;
             }
             req.CMD = CommandType.TrackInReq;
             req.Machine = _config.Mqtt?.EqID ?? string.Empty;
@@ -599,6 +602,13 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                             SystemLogMessage?.Invoke($"[EAP 配方下發] 收到 PP_SELECT: {StagedRecipeId} (已記憶)");
                         }
 
+                        TaskCompletionSource<(string RecipeId, bool Succeeded)> pendingTcs = null;
+                        lock (_ppSelectLock)
+                        {
+                            pendingTcs = _pendingPpSelectTcs;
+                            _pendingPpSelectTcs = null;
+                        }
+
                         string manualProgram = ManualProgramPathProvider?.Invoke()?.Trim();
                         string targetProgramPath;
                         string effectiveRecipeName;
@@ -617,9 +627,11 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                             {
                                 reply.RtnResult = RtnResult.FAIL;
                                 reply.RtnMsg = "RecipeID is empty";
+                                pendingTcs?.TrySetResult((string.Empty, false));
                                 break;
                             }
-                            targetProgramPath = rawRecipe;
+                            // 依規格將 recipe 帶入完整程式路徑中給設備
+                            targetProgramPath = CombineRecipePath(_config.Opc?.RecipeDirectory, rawRecipe);
                             effectiveRecipeName = rawRecipe;
                         }
 
@@ -627,6 +639,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                         {
                             reply.RtnResult = RtnResult.FAIL;
                             reply.RtnMsg = "OPC UA is disconnected, cannot deliver recipe to laser machine";
+                            pendingTcs?.TrySetResult((string.Empty, false));
                         }
                         else
                         {
@@ -648,12 +661,16 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                                 {
                                     CurrentOrder.RecipeId = effectiveRecipeName;
                                 }
+
+                                pendingTcs?.TrySetResult((targetProgramPath, true));
                             }
                             else
                             {
                                 reply.RtnResult = RtnResult.FAIL;
                                 reply.RtnMsg = $"DeliverRecipe failed or timed out for Program: {targetProgramPath}";
                                 SystemLogMessage?.Invoke($"[配方切換交握失敗] 雷射機配方切換失敗或逾時！");
+
+                                pendingTcs?.TrySetResult((targetProgramPath, false));
                             }
                         }
                         break;
@@ -734,74 +751,135 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
 
         private async Task<bool> ProcessMachineRecipeRequestAsync(string machineLotId)
         {
-            string targetProgram = string.Empty;
-            string targetCondition = "*****";
-            short sheetCount = 5;
-            string sourceInfo = string.Empty;
-
-            // 1. 優先權 1：IT 測試功能 (手動覆蓋)
+            // 1. 優先權 1：IT 測試功能 (本機調試手動覆蓋)
             var testSetting = TestRecipeProvider?.Invoke();
             if (testSetting.HasValue && testSetting.Value.IsEnabled && !string.IsNullOrWhiteSpace(testSetting.Value.ProgramFile))
             {
-                targetProgram = testSetting.Value.ProgramFile.Trim();
-                targetCondition = !string.IsNullOrWhiteSpace(testSetting.Value.ConditionFile) ? testSetting.Value.ConditionFile.Trim() : "*****";
-                sheetCount = testSetting.Value.SheetCount > 0 ? testSetting.Value.SheetCount : (short)5;
-                sourceInfo = "[IT 測試功能指定]";
+                string targetProgram = testSetting.Value.ProgramFile.Trim();
+                string targetCondition = !string.IsNullOrWhiteSpace(testSetting.Value.ConditionFile) ? testSetting.Value.ConditionFile.Trim() : "*****";
+                short sheetCount = testSetting.Value.SheetCount > 0 ? testSetting.Value.SheetCount : (short)5;
+                SystemLogMessage?.Invoke($"[IT 測試功能指定] 響應機台配方交握: 程式='{targetProgram}', 條件='{targetCondition}', 片數={sheetCount}");
+                return await OpcService.HandshakeRecipeToMachineAsync(targetProgram, targetCondition, sheetCount).ConfigureAwait(false);
             }
-            // 2. 優先權 2：主畫面手動指定加工程式路徑
-            else if (!string.IsNullOrWhiteSpace(ManualProgramPathProvider?.Invoke()))
+
+            // 2. 正常生產流程：OP 在設備操作面板輸入 LOT ID 後，發起工單進站
+            if (string.IsNullOrWhiteSpace(machineLotId))
             {
-                targetProgram = ManualProgramPathProvider.Invoke().Trim();
-                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
-                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
-                sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                sourceInfo = "[主畫面手動指定路徑]";
-            }
-            // 3. 優先權 3：工單進站或 PP_SELECT 記憶之配方 (StagedRecipeId)
-            else if (!string.IsNullOrWhiteSpace(StagedRecipeId))
-            {
-                targetProgram = StagedRecipeId.Trim();
-                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
-                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
-                sheetCount = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                sourceInfo = "[進站/PP_SELECT 記憶配方]";
-            }
-            // 4. 優先權 4：當前工單中記錄之 RecipeId
-            else if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.RecipeId))
-            {
-                targetProgram = CurrentOrder.RecipeId.Trim();
-                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
-                targetCondition = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
-                sheetCount = CurrentOrder.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
-                sourceInfo = "[當前工單配方]";
-            }
-            else
-            {
-                _logger.Warn("Coordinator", $"[機台配方請求警告] 收到機台 GetRecipe.Req (LotID: '{machineLotId}')，但目前無任何已進站配方或手動程式！");
-                SystemLogMessage?.Invoke($"[機台配方請求警告] 收到機台 GetRecipe.Req (LotID: '{machineLotId}')，但目前無任何已進站配方或手動程式可供下發。");
+                _logger.Warn("Coordinator", "[機台配方請求失敗] 機台送出的 LotID 為空白，拒絕交握。");
+                SystemLogMessage?.Invoke("[機台配方請求失敗] 機台送出的 LotID 為空白，拒絕交握。");
+                await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
                 return false;
             }
 
-            _logger.Info("Coordinator", $"[響應機台配方請求] {sourceInfo} 準備與機台交握: Program='{targetProgram}', Condition='{targetCondition}', SheetCount={sheetCount}, LotID='{machineLotId}'");
-            SystemLogMessage?.Invoke($"[響應機台配方交握] {sourceInfo} 開始與機台交握: 程式='{targetProgram}', 條件='{targetCondition}', 片數={sheetCount}");
-
-            bool success = await OpcService.HandshakeRecipeToMachineAsync(targetProgram, targetCondition, sheetCount).ConfigureAwait(false);
-            if (success)
+            if (!EapService.IsAliveGreen)
             {
-                _logger.Info("Coordinator", $"[配方交握成功] 機台已確認接收 {sourceInfo} 配方: {targetProgram}");
-                SystemLogMessage?.Invoke($"[配方交握成功] 機台已確認接收 {sourceInfo} 配方: {targetProgram}");
-                if (CurrentOrder != null)
+                _logger.Warn("Coordinator", "[機台進站失敗] 上位 EAP 未連線 (非綠燈狀態)，無法進行工單進站，拒絕機台交握。");
+                SystemLogMessage?.Invoke("[機台進站失敗] 上位 EAP 未連線，無法進行工單進站，向機台發送拒絕交握。");
+                await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
+                return false;
+            }
+
+            string operatorId = !string.IsNullOrWhiteSpace(CurrentOperatorId) ? CurrentOperatorId : DefaultFallbackOperatorId;
+            if (string.IsNullOrWhiteSpace(CurrentOperatorId))
+            {
+                _logger.Info("Coordinator", $"[機台自動進站] 現場尚未登入作業員，自動採用預設工號: {operatorId}");
+                SystemLogMessage?.Invoke($"[機台自動進站] 現場尚未登入作業員，自動採用預設工號: {operatorId}");
+            }
+
+            // 建立非同步等待上位 EAP PP_SELECT 的等待器
+            TaskCompletionSource<(string RecipeId, bool Succeeded)> ppSelectTcs;
+            lock (_ppSelectLock)
+            {
+                _pendingPpSelectTcs = new TaskCompletionSource<(string RecipeId, bool Succeeded)>(TaskCreationOptions.RunContinuationsAsynchronously);
+                ppSelectTcs = _pendingPpSelectTcs;
+            }
+
+            string lot = machineLotId.Trim();
+            var trackInReq = new TrackInReqMessage
+            {
+                CMD = CommandType.TrackInReq,
+                WorkOrder = new List<string> { lot },
+                CassetteID = new List<string>(),
+                MaterialID = string.Empty,
+                UserID = operatorId,
+                ToolingID = string.Empty,
+                PanelID = string.Empty,
+                Qty = "5"
+            };
+
+            SystemLogMessage?.Invoke($"[機台觸發進站] OP 於設備輸入 LotID='{lot}'，使用工號 '{operatorId}' 自動向上位 EAP 發起工單進站...");
+            var reply = await TrackInAsync(trackInReq).ConfigureAwait(false);
+
+            bool isTrackInSuccess = (reply.RtnResult == RtnResult.PASS || string.Equals(reply.RtnResult.ToString(), "SUCCESS", StringComparison.OrdinalIgnoreCase))
+                && (reply.CMD == CommandType.ReplyTrackInReq || reply.CMD == CommandType.AlarmReport);
+
+            if (!isTrackInSuccess)
+            {
+                lock (_ppSelectLock)
                 {
-                    CurrentOrder.RecipeId = System.IO.Path.GetFileName(targetProgram);
+                    if (_pendingPpSelectTcs == ppSelectTcs) _pendingPpSelectTcs = null;
+                }
+                _logger.Warn("Coordinator", $"[機台進站失敗] EAP 進站審核拒絕 (原因: {reply.RtnMsg})，向機台發送拒絕代碼。");
+                SystemLogMessage?.Invoke($"[機台進站失敗] EAP 進站審核拒絕: {reply.RtnMsg}，向機台發送拒絕交握。");
+                await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
+                return false;
+            }
+
+            // 檢查主畫面是否有手動指定加工程式路徑覆蓋
+            string manualProg = ManualProgramPathProvider?.Invoke()?.Trim();
+            if (!string.IsNullOrWhiteSpace(manualProg))
+            {
+                lock (_ppSelectLock)
+                {
+                    if (_pendingPpSelectTcs == ppSelectTcs) _pendingPpSelectTcs = null;
+                }
+                string manualCnd = ManualConditionFileProvider?.Invoke()?.Trim();
+                string cond = !string.IsNullOrWhiteSpace(manualCnd) ? manualCnd : "*****";
+                short sheets = CurrentOrder?.TotalQty > 0 ? (short)CurrentOrder.TotalQty : (short)5;
+                SystemLogMessage?.Invoke($"[手動指定覆蓋] 偵測到主畫面手動指定加工程式: {manualProg}，優先執行機台交握...");
+                bool ok = await OpcService.HandshakeRecipeToMachineAsync(manualProg, cond, sheets).ConfigureAwait(false);
+                if (ok)
+                {
+                    if (CurrentOrder != null) CurrentOrder.RecipeId = System.IO.Path.GetFileName(manualProg);
+                    return true;
+                }
+                else
+                {
+                    await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
+                    return false;
+                }
+            }
+
+            // 等待上位 EAP 下發 PP_SELECT 指令 (安全逾時 25 秒)
+            SystemLogMessage?.Invoke($"[機台進站成功] 工單 {lot} 進站成功，等待上位 EAP 下發 PP_SELECT 配方指令 (逾時 25 秒)...");
+            var completedTask = await Task.WhenAny(ppSelectTcs.Task, Task.Delay(25000)).ConfigureAwait(false);
+            if (completedTask == ppSelectTcs.Task)
+            {
+                var result = await ppSelectTcs.Task.ConfigureAwait(false);
+                if (result.Succeeded)
+                {
+                    SystemLogMessage?.Invoke($"[機台配方載入完成] 工單 {lot} 配方交握完成！");
+                    return true;
+                }
+                else
+                {
+                    _logger.Warn("Coordinator", $"[機台配方交握失敗] EAP PP_SELECT 配方交握機台失敗。");
+                    SystemLogMessage?.Invoke($"[機台配方交握失敗] EAP PP_SELECT 配方交握機台失敗。");
+                    await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
+                    return false;
                 }
             }
             else
             {
-                _logger.Warn("Coordinator", $"[配方交握未完成] 機台未能在時限內完成交握 (Program='{targetProgram}')");
-                SystemLogMessage?.Invoke($"[配方交握未完成] 機台未能在時限內完成交握 (Program='{targetProgram}')");
+                lock (_ppSelectLock)
+                {
+                    if (_pendingPpSelectTcs == ppSelectTcs) _pendingPpSelectTcs = null;
+                }
+                _logger.Warn("Coordinator", $"[等待 PP_SELECT 逾時] EAP 未在 25 秒內下發 PP_SELECT，向機台發送拒絕交握。");
+                SystemLogMessage?.Invoke($"[等待 PP_SELECT 逾時] 等待 EAP PP_SELECT 逾時 (25s)，向機台發送拒絕交握。");
+                await OpcService.RejectRecipeHandshakeAsync(-1).ConfigureAwait(false);
+                return false;
             }
-
-            return success;
         }
 
         public async Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, CancellationToken cancellationToken = default)

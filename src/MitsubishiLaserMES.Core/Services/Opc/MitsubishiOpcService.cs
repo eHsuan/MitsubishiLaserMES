@@ -240,15 +240,59 @@ namespace MitsubishiLaserMES.Core.Services.Opc
             }
         }
 
+        public async Task<bool> RejectRecipeHandshakeAsync(short errorCode = -1, CancellationToken cancellationToken = default)
+        {
+            if (!IsConnected || _client == null || _diagnosticService == null)
+            {
+                LogMessage?.Invoke("[OPC 拒絕配方] 未連線，無法寫入拒絕代碼。");
+                return false;
+            }
+
+            try
+            {
+                short code = errorCode == 0 ? (short)-1 : errorCode;
+                LogMessage?.Invoke($"[OPC 拒絕配方] 向機台發送拒絕交握代碼 GetRecipe.Ack = {code}...");
+                var ackRes = await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, code, cancellationToken).ConfigureAwait(false);
+                if (!ackRes.Succeeded)
+                {
+                    LogMessage?.Invoke($"[OPC 拒絕配方失敗] 寫入 GetRecipe.Ack={code} 失敗: {ackRes.Error}");
+                    return false;
+                }
+
+                // 等待機台將 GetRecipe.Req 降為 false
+                DateTime timeoutTime = DateTime.UtcNow.AddSeconds(5);
+                while (DateTime.UtcNow < timeoutTime && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                    var checkReq = await _client.ReadAsync(LaserOpcNodeCatalog.Get(LaserOpcNode.GetRecipeRequest), cancellationToken).ConfigureAwait(false);
+                    if (checkReq.Succeeded && checkReq.Value != null && !Convert.ToBoolean(checkReq.Value))
+                    {
+                        _lastGetRecipeReq = false;
+                        break;
+                    }
+                }
+
+                // 復歸 Ack = 0
+                await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, (short)0, cancellationToken).ConfigureAwait(false);
+                LogMessage?.Invoke("[OPC 拒絕配方] 已復歸 GetRecipe.Ack = 0。");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogMessage?.Invoke($"[OPC 拒絕配方例外] {ex.Message}");
+                try
+                {
+                    await _diagnosticService.WriteAsync(LaserOpcNode.GetRecipeAck, (short)0, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch { }
+                return false;
+            }
+        }
+
         private static string NormalizeRecipeFileName(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) return string.Empty;
-            string trimmed = filePath.Trim();
-            if (trimmed.Contains("\\") || trimmed.Contains("/"))
-            {
-                return System.IO.Path.GetFileName(trimmed);
-            }
-            return trimmed;
+            return filePath.Trim().Trim('\"');
         }
 
         public async Task<bool> StartScheduleAsync(CancellationToken cancellationToken = default)
