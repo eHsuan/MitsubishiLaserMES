@@ -55,6 +55,6 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
         Task<ReplyTrackOutReqPayload> TrackOutAsync(TrackOutReqPayload req, CancellationToken cancellationToken = default);
         bool RemoveTrackedInOrder(string workOrder);
         Task<bool> SwitchOpcModeAsync(short mode, CancellationToken cancellationToken = default);
-        Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, CancellationToken cancellationToken = default);
+        Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, string adminNo = null, CancellationToken cancellationToken = default);
     }
 }

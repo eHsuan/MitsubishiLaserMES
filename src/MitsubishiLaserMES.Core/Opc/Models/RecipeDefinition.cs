@@ -8,7 +8,7 @@ namespace MitsubishiLaserOpc.Models
 
 public sealed class RecipeDefinition
 {
-    public RecipeDefinition(string recipeId, string version, string programFile, string conditionFile, short sheetCount)
+    public RecipeDefinition(string recipeId, string version, string programFile, string conditionFile, short sheetCount, string adminNo = null)
     {
         if (string.IsNullOrWhiteSpace(recipeId)) throw new ArgumentException("RecipeId is required.", nameof(recipeId));
         if (string.IsNullOrWhiteSpace(programFile) || programFile.Length > 128) throw new ArgumentException("ProgramFile is required and limited to 128 characters.", nameof(programFile));
@@ -20,6 +20,7 @@ public sealed class RecipeDefinition
         ProgramFile = programFile;
         ConditionFile = conditionFile;
         SheetCount = sheetCount;
+        AdminNo = !string.IsNullOrWhiteSpace(adminNo) ? adminNo : recipeId;
     }
 
     public string RecipeId { get; }
@@ -27,5 +28,6 @@ public sealed class RecipeDefinition
     public string ProgramFile { get; }
     public string ConditionFile { get; }
     public short SheetCount { get; }
+    public string AdminNo { get; }
 }
 }

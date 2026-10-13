@@ -61,6 +61,7 @@ public static class LaserOpcNodeCatalog
         Add(LaserOpcNode.HostWatchDog, "HOST.Status.Opc.WatchDog", OpcValueType.UInt16, NodeDirection.HostToMachine, "Host WatchDog 計數");
         Add(LaserOpcNode.RemoteLotId, "MACHINE.Status.Remote.Data.LotID", OpcValueType.String, NodeDirection.MachineToHost, "設備送出的 Lot ID", new NodeConstraints { MaxStringLength = 20 });
         Add(LaserOpcNode.GetRecipeRequest, "MACHINE.Status.Remote.GetRecipe.Req", OpcValueType.Boolean, NodeDirection.MachineToHost, "設備要求取得 Recipe");
+        Add(LaserOpcNode.RecipeAdminNo, "HOST.Status.Remote.Data.Recipe.000.AdminNo", OpcValueType.String, NodeDirection.HostToMachine, "配方管理番號/批號", new NodeConstraints { MaxStringLength = 64 });
         Add(LaserOpcNode.RecipeProgramFile, "HOST.Status.Remote.Data.Recipe.000.ProgramFile", OpcValueType.String, NodeDirection.HostToMachine, "加工程式檔名（含路徑）", new NodeConstraints { MaxStringLength = 128 });
         Add(LaserOpcNode.RecipeConditionFile, "HOST.Status.Remote.Data.Recipe.000.ConditionFile", OpcValueType.String, NodeDirection.HostToMachine, "加工條件檔名（含路徑）", new NodeConstraints { MaxStringLength = 128 });
         Add(LaserOpcNode.RecipeSheetNum, "HOST.Status.Remote.Data.Recipe.000.SheetNum", OpcValueType.Int16, NodeDirection.HostToMachine, "預定加工片數；-1 代表不限", new NodeConstraints { Minimum = -1, Maximum = 9999 });

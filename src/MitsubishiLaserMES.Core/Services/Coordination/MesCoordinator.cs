@@ -650,7 +650,11 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                             SystemLogMessage?.Invoke($"[配方切換交握] 執行交握 ProgramFile: {targetProgramPath}, ConditionFile: {fullConditionPath} (片數: {sheetCount}) 至雷射機...");
                             _logger.Info("DeliverRecipe", $"準備交握機台配方: ProgramFile={targetProgramPath}, ConditionFile={fullConditionPath}, SheetNum={sheetCount}");
 
-                            bool success = await OpcService.HandshakeRecipeToMachineAsync(targetProgramPath, fullConditionPath, sheetCount).ConfigureAwait(false);
+                            string adminNo = !string.IsNullOrWhiteSpace(CurrentOrder?.WorkOrder)
+                                ? CurrentOrder.WorkOrder
+                                : (!string.IsNullOrWhiteSpace(OpcService.ActiveLotId) ? OpcService.ActiveLotId : "LOT-DEFAULT");
+
+                            bool success = await OpcService.HandshakeRecipeToMachineAsync(targetProgramPath, fullConditionPath, sheetCount, adminNo).ConfigureAwait(false);
                             if (success)
                             {
                                 reply.RtnResult = RtnResult.PASS;
@@ -758,8 +762,11 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
                 string targetProgram = testSetting.Value.ProgramFile.Trim();
                 string targetCondition = !string.IsNullOrWhiteSpace(testSetting.Value.ConditionFile) ? testSetting.Value.ConditionFile.Trim() : "*****";
                 short sheetCount = testSetting.Value.SheetCount > 0 ? testSetting.Value.SheetCount : (short)5;
-                SystemLogMessage?.Invoke($"[IT 測試功能指定] 響應機台配方交握: 程式='{targetProgram}', 條件='{targetCondition}', 片數={sheetCount}");
-                return await OpcService.HandshakeRecipeToMachineAsync(targetProgram, targetCondition, sheetCount).ConfigureAwait(false);
+                string testAdmin = !string.IsNullOrWhiteSpace(machineLotId)
+                    ? machineLotId.Trim()
+                    : (!string.IsNullOrWhiteSpace(CurrentOrder?.WorkOrder) ? CurrentOrder.WorkOrder : "LOT-TEST");
+                SystemLogMessage?.Invoke($"[IT 測試功能指定] 響應機台配方交握: AdminNo='{testAdmin}', 程式='{targetProgram}', 條件='{targetCondition}', 片數={sheetCount}");
+                return await OpcService.HandshakeRecipeToMachineAsync(targetProgram, targetCondition, sheetCount, testAdmin).ConfigureAwait(false);
             }
 
             // 2. 正常生產流程：OP 在設備操作面板輸入 LOT ID 後，發起工單進站
@@ -857,7 +864,7 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             }
         }
 
-        public async Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, CancellationToken cancellationToken = default)
+        public async Task<bool> TriggerManualRecipeHandshakeAsync(string programFile = null, string conditionFile = null, short sheetCount = 0, string adminNo = null, CancellationToken cancellationToken = default)
         {
             string prog = programFile;
             string cond = conditionFile;
@@ -901,8 +908,14 @@ namespace MitsubishiLaserMES.Core.Services.Coordination
             if (string.IsNullOrWhiteSpace(cond)) cond = "*****";
             if (sheets <= 0) sheets = 5;
 
-            SystemLogMessage?.Invoke($"[手動直接發送交握] 正在執行原廠交握: Program='{prog}', Condition='{cond}', Sheets={sheets}...");
-            return await OpcService.HandshakeRecipeToMachineAsync(prog, cond, sheets, cancellationToken).ConfigureAwait(false);
+            string effectiveAdmin = !string.IsNullOrWhiteSpace(adminNo)
+                ? adminNo.Trim()
+                : (!string.IsNullOrWhiteSpace(CurrentOrder?.WorkOrder)
+                    ? CurrentOrder.WorkOrder
+                    : (!string.IsNullOrWhiteSpace(OpcService.ActiveLotId) ? OpcService.ActiveLotId : "LOT-MANUAL"));
+
+            SystemLogMessage?.Invoke($"[手動直接發送交握] 正在執行原廠交握: AdminNo='{effectiveAdmin}', Program='{prog}', Condition='{cond}', Sheets={sheets}...");
+            return await OpcService.HandshakeRecipeToMachineAsync(prog, cond, sheets, effectiveAdmin, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

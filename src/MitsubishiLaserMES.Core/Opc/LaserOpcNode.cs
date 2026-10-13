@@ -19,6 +19,7 @@ public enum LaserOpcNode
     HostWatchDog,
     RemoteLotId,
     GetRecipeRequest,
+    RecipeAdminNo,
     RecipeProgramFile,
     RecipeConditionFile,
     RecipeSheetNum,

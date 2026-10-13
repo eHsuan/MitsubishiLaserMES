@@ -21,6 +21,7 @@ public sealed class RecipeHandshakeService
     {
         foreach (var write in new (LaserOpcNode Node, object Value)[]
         {
+            (LaserOpcNode.RecipeAdminNo, recipe.AdminNo ?? recipe.RecipeId ?? string.Empty),
             (LaserOpcNode.RecipeProgramFile, recipe.ProgramFile),
             (LaserOpcNode.RecipeConditionFile, recipe.ConditionFile),
             (LaserOpcNode.RecipeSheetNum, recipe.SheetCount),

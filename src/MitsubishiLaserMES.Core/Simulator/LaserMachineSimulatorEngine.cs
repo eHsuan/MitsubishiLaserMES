@@ -39,6 +39,7 @@ namespace MitsubishiLaserMES.Core.Simulator
         // 配方請求與交握
         public string RemoteLotId { get; private set; } = string.Empty;
         public bool GetRecipeRequest { get; private set; } = false;
+        public string RequestedAdminNo { get; private set; } = string.Empty;
         public string RequestedProgramFile { get; private set; } = string.Empty;
         public string RequestedConditionFile { get; private set; } = string.Empty;
         public short RequestedSheetNum { get; private set; } = -1;
@@ -357,6 +358,9 @@ namespace MitsubishiLaserMES.Core.Simulator
                     case LaserOpcNode.GetRecipeRequest:
                         return GetRecipeRequest;
 
+                    case LaserOpcNode.RecipeAdminNo:
+                        return RequestedAdminNo;
+
                     case LaserOpcNode.GetRecipeAck:
                         return GetRecipeAck;
 
@@ -463,6 +467,12 @@ namespace MitsubishiLaserMES.Core.Simulator
                         return true;
 
                     // 3. 配方寫入
+                    case LaserOpcNode.RecipeAdminNo:
+                        RequestedAdminNo = value?.ToString() ?? string.Empty;
+                        Log($"[上位機寫入配方] 管理番號/批號: {RequestedAdminNo}");
+                        NotifyStateChanged();
+                        return true;
+
                     case LaserOpcNode.RecipeProgramFile:
                         RequestedProgramFile = value?.ToString() ?? string.Empty;
                         Log($"[上位機寫入配方] 加工程式檔名: {RequestedProgramFile}");
@@ -488,7 +498,9 @@ namespace MitsubishiLaserMES.Core.Simulator
 
                         if (ack == 1)
                         {
-                            ActiveLotId = !string.IsNullOrEmpty(RemoteLotId) ? RemoteLotId : "LOT-" + DateTime.Now.ToString("MMdd-HHmm");
+                            ActiveLotId = !string.IsNullOrEmpty(RequestedAdminNo)
+                                ? RequestedAdminNo
+                                : (!string.IsNullOrEmpty(RemoteLotId) ? RemoteLotId : "LOT-" + DateTime.Now.ToString("MMdd-HHmm"));
                             ActiveProgramFile = RequestedProgramFile;
                             ActiveConditionFile = RequestedConditionFile;
                             ScheduledCount = RequestedSheetNum > 0 ? RequestedSheetNum : (short)5;

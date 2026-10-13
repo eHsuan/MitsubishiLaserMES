@@ -26,6 +26,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
         private Task _pollTask;
         private readonly Dictionary<string, string> _activeAlarms = new Dictionary<string, string>();
         private bool _lastGetRecipeReq = false;
+        private string _lastGetRecipeLotId = string.Empty;
 
         public bool IsConnected { get; private set; }
         public bool IsVirtual => _settings.UseVirtualSimulator;
@@ -129,15 +130,15 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
         public Task<bool> DeliverRecipeAsync(string recipeId, short sheetCount, CancellationToken cancellationToken = default)
         {
-            return HandshakeRecipeToMachineAsync(recipeId, "*****", sheetCount, cancellationToken);
+            return HandshakeRecipeToMachineAsync(recipeId, "*****", sheetCount, null, cancellationToken);
         }
 
-        public Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
+        public Task<bool> DeliverRecipeAsync(string programFile, string conditionFile, short sheetCount, string adminNo = null, CancellationToken cancellationToken = default)
         {
-            return HandshakeRecipeToMachineAsync(programFile, conditionFile, sheetCount, cancellationToken);
+            return HandshakeRecipeToMachineAsync(programFile, conditionFile, sheetCount, adminNo, cancellationToken);
         }
 
-        public async Task<bool> HandshakeRecipeToMachineAsync(string programFile, string conditionFile, short sheetCount, CancellationToken cancellationToken = default)
+        public async Task<bool> HandshakeRecipeToMachineAsync(string programFile, string conditionFile, short sheetCount, string adminNo = null, CancellationToken cancellationToken = default)
         {
             if (!IsConnected || _client == null || _diagnosticService == null)
             {
@@ -147,12 +148,27 @@ namespace MitsubishiLaserMES.Core.Services.Opc
 
             try
             {
+                // 原廠規格化：AdminNo (批號/管理番號)
+                string admin = !string.IsNullOrWhiteSpace(adminNo)
+                    ? adminNo.Trim()
+                    : (!string.IsNullOrWhiteSpace(_lastGetRecipeLotId)
+                        ? _lastGetRecipeLotId.Trim()
+                        : (!string.IsNullOrWhiteSpace(ActiveLotId) ? ActiveLotId.Trim() : "LOT-DEFAULT"));
+
                 // 原廠規格化：ProgramFile 與 ConditionFile 僅傳純檔名或相對路徑，避免絕對路徑引發機台排程載入異常
                 string prog = NormalizeRecipeFileName(programFile);
                 string cond = string.IsNullOrWhiteSpace(conditionFile) ? "*****" : NormalizeRecipeFileName(conditionFile);
                 short sheets = sheetCount <= 0 ? (short)5 : sheetCount;
 
-                LogMessage?.Invoke($"[OPC 配方交握開始] 依原廠時序寫入配方參數: ProgramFile='{prog}', ConditionFile='{cond}', SheetNum={sheets}");
+                LogMessage?.Invoke($"[OPC 配方交握開始] 依原廠時序寫入配方參數: AdminNo='{admin}', ProgramFile='{prog}', ConditionFile='{cond}', SheetNum={sheets}");
+
+                // 0. 寫入 AdminNo (批號/管理番號 - 原廠 PBN_KADO ini [RECIPE] 第一項)
+                var aRes = await _diagnosticService.WriteAsync(LaserOpcNode.RecipeAdminNo, admin, cancellationToken).ConfigureAwait(false);
+                if (!aRes.Succeeded)
+                {
+                    LogMessage?.Invoke($"[OPC 配方交握失敗] 寫入 AdminNo ('{admin}') 失敗: {aRes.Error}");
+                    return false;
+                }
 
                 // 1. 寫入 ProgramFile
                 var pRes = await _diagnosticService.WriteAsync(LaserOpcNode.RecipeProgramFile, prog, cancellationToken).ConfigureAwait(false);
@@ -470,6 +486,7 @@ namespace MitsubishiLaserMES.Core.Services.Opc
                     if (lotReqRes.Succeeded && lotReqRes.Value != null)
                     {
                         reqLot = lotReqRes.Value.ToString();
+                        _lastGetRecipeLotId = reqLot;
                     }
                     LogMessage?.Invoke($"[OPC 機台請求配方] 偵測到機台發出 GetRecipe.Req = true (LotID: '{reqLot}')，觸發配方交握程序。");
                     RecipeRequestedByMachine?.Invoke(reqLot);
